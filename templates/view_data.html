@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Bronzi Capuani</title>
+    <style>
+        .responsive-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        .responsive-table th, .responsive-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .responsive-table th {
+            background-color: #f4f4f4;
+            font-weight: bold;
+        }
+        .search-bar {
+            margin-bottom: 10px;
+            padding: 8px;
+            width: 100%;
+            font-size: 16px;
+        }
+        /* Tabella immagini */
+        .image-table {
+            width: auto; /* Adatta la larghezza al contenuto */
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        .image-table th, .image-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        .image-table img {
+            max-width: 150px; /* Larghezza massima */
+            max-height: 150px; /* Altezza massima */
+            height: auto; /* Mantiene il rapporto di aspetto */
+            width: auto; /* Mantiene il rapporto di aspetto */
+        }
+        @media screen and (max-width: 768px) {
+            .responsive-table {
+                font-size: 12px;
+            }
+            .responsive-table th, .responsive-table td {
+                padding: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Bronzi Capuani</h1>
+
+    <!-- Barra di ricerca -->
+    <input type="text" id="searchInput" class="search-bar" placeholder="Cerca nella tabella...">
+
+    <!-- Tabella principale -->
+    <table id="dataTable" class="responsive-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>ID Unico</th>
+                <th>Cronologia</th>
+                <th>Forma</th>
+                <th>ID Luogo di Conservazione</th>
+                <th>Luogo di Conservazione</th>
+                <th>Longitudine del luogo di conservazione</th>
+                <th>Latitudine del luogo di conservazione</th>
+                <th>Numero di Inventario</th>
+                <th>ID Luogo di Ritrovamento</th>
+                <th>Luogo di Ritrovamento</th>
+                <th>Longitudine del luogo di ritrovamento</th>
+                <th>Latitudine del luogo di ritrovamento</th>
+                <th>Fonte Bibliografica</th>
+                <th>Dimensioni</th>
+                <th>Descrizione</th>
+                <th>Luogo di Produzione</th>
+                <th>Tipologia</th>
+                <th>Riferimenti Bibliografici</th>
+                <th>Anse/manici</th>
+                <th>Base/piede</th>
+                <th>Decorazione</th>
+                <th>Tecniche decorative</th>
+                <th>Iconografia</th>
+                <th>Tecniche produttive</th>
+                <th>Analisi Archeometriche</th>
+                <th>Tipo di Analisi</th>
+                <th>Materie Prime</th>
+                <th>Provenienza</th>
+                <th>Altre Informazioni</th>
+                <th>Bollo</th>
+                <th>Testo del Bollo</th>
+                <th>Azioni</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for obj in archaeological_objects %}
+            <tr>
+                <td>{{ obj.id }}</td>
+                <td>{{ obj.unique_id }}</td>
+                <td>{{ obj.chronology }}</td>
+                <td>{{ obj.shape }}</td>
+                <td>{{ obj.storing_place_id }}</td>
+                <td>{{ obj.storing_place }}</td>
+                <td>{{ obj.longitude_storing_place }}</td>
+                <td>{{ obj.latitude_storing_place }}</td>
+                <td>{{ obj.inventory_number }}</td>
+                <td>{{ obj.finding_spot_id }}</td>
+                <td>{{ obj.finding_spot }}</td>
+                <td>{{ obj.longitude_finding_spot }}</td>
+                <td>{{ obj.latitude_finding_spot }}</td>
+                <td>{{ obj.bibliographical_source }}</td>
+                <td>{{ obj.dimensions }}</td>
+                <td>{{ obj.description }}</td>
+                <td>{{ obj.production_place }}</td>
+                <td>{{ obj.typology }}</td>
+                <td>{{ obj.bibliographic_references }}</td>
+                <td>{{ obj.handles }}</td>
+                <td>{{ obj.foot }}</td>
+                <td>{{ obj.decoration }}</td>
+                <td>{{ obj.decoration_techniques }}</td>
+                <td>{{ obj.iconography }}</td>
+                <td>{{ obj.manufacturing_techniques }}</td>
+                <td>{{ obj.archaeometry_analyses }}</td>
+                <td>{{ obj.type_of_analysis }}</td>
+                <td>{{ obj.raw_materials }}</td>
+                <td>{{ obj.provenance }}</td>
+                <td>{{ obj.other_info }}</td>
+                <td>{{ obj.stamp }}</td>
+                <td>{{ obj.stamp_text }}</td>
+                <td class="actions">
+                    <a href="{{ url_for('edit_object', id=obj.id) }}">Modifica</a>
+                </td>
+            </tr>
+            
+            <!-- Sezione immagini -->
+            <tr>
+                <td colspan="33">
+                    <h3>Immagini per {{ obj.unique_id }}</h3>
+                    <table class="image-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Immagine</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for img in images %}
+                                {% if img.archaeological_object_id == obj.id %}
+                                <tr>
+                                    <td>{{ img.id }}</td>
+                                    <td>
+                                        <img src="{{ url_for('uploaded_file', filename=img.path) }}" alt="Immagine {{ img.id }}">
+                                    </td>
+                                </tr>
+
+                  </td>
+                        <td>
+                            <!-- Pulsante di modifica (può essere migliorato per gestire modifiche specifiche) -->
+                            <form action="{{ url_for('delete_image', image_id=img.id) }}" method="post" style="display:inline;">
+                                <button type="submit">Elimina</button>
+                            </form>
+                        </td>
+                    </tr>         
+                <tr>
+                    <td colspan="3">
+                        <form action="{{ url_for('add_image', object_id=obj.id) }}" method="post" enctype="multipart/form-data">
+                            <label for="newImage">Aggiungi nuova immagine:</label>
+                            <input type="file" name="new_image" id="newImage" accept="image/*" required>
+                            <button type="submit">Carica</button>
+                        </form>
+                    </td>
+                </tr>
+                    
+                                {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Script per la barra di ricerca -->
+    <script>
+        document.getElementById('searchInput').addEventListener('keyup', function() {
+            let filter = this.value.toUpperCase();
+            let table = document.getElementById('dataTable');
+            let rows = table.getElementsByTagName('tr');
+
+            for (let i = 1; i < rows.length; i++) {
+                let cells = rows[i].getElementsByTagName('td');
+                let match = false;
+
+                for (let j = 0; j < cells.length; j++) {
+                    if (cells[j] && cells[j].innerText.toUpperCase().indexOf(filter) > -1) {
+                        match = true;
+                        break;
+                    }
+                }
+
+                rows[i].style.display = match ? '' : 'none';
+            }
+        });
+    </script>
+</body>
+</html>

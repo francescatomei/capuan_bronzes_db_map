@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Archaeological Object</title>
+</head>
+<body>
+    <h1>Edit Archaeological Object</h1>
+    <form method="POST" action="{{ url_for('edit_object', id=obj.id) }}">
+        <!-- Campo unico -->
+        <label for="unique_id">Unique ID:</label>
+        <input type="text" id="unique_id" name="unique_id" value="{{ obj.unique_id }}">
+
+        <!-- Informazioni generali -->
+        <label for="chronology">Chronology:</label>
+        <input type="text" id="chronology" name="chronology" value="{{ obj.chronology }}">
+
+        <label for="shape">Shape:</label>
+        <input type="text" id="shape" name="shape" value="{{ obj.shape }}">
+
+        <label for="storing_place">Storing Place:</label>
+        <input type="text" id="storing_place" name="storing_place" value="{{ obj.storing_place }}">
+
+        <label for="finding_spot">Finding Spot:</label>
+        <input type="text" id="finding_spot" name="finding_spot" value="{{ obj.finding_spot }}">
+
+        <label for="storing_place_id">Storing Place ID:</label>
+        <input type="number" id="storing_place_id" name="storing_place_id" value="{{ obj.storing_place_id }}">
+
+        <label for="finding_spot_id">Finding Spot ID:</label>
+        <input type="number" id="finding_spot_id" name="finding_spot_id" value="{{ obj.finding_spot_id }}">
+
+        <label for="inventory_number">Inventory Number:</label>
+        <input type="text" id="inventory_number" name="inventory_number" value="{{ obj.inventory_number }}">
+
+        <label for="bibliographical_source">Bibliographical Source:</label>
+        <input type="text" id="bibliographical_source" name="bibliographical_source" value="{{ obj.bibliographical_source }}">
+
+        <label for="dimensions">Dimensions:</label>
+        <input type="text" id="dimensions" name="dimensions" value="{{ obj.dimensions }}">
+
+        <label for="description">Description:</label>
+        <input type="text" id="description" name="description" value="{{ obj.description }}">
+
+        <label for="production_place">Production Place:</label>
+        <input type="text" id="production_place" name="production_place" value="{{ obj.production_place }}">
+
+        <label for="typology">Typology:</label>
+        <input type="text" id="typology" name="typology" value="{{ obj.typology }}">
+
+        <label for="bibliographic_references">Bibliographic References:</label>
+        <input type="text" id="bibliographic_references" name="bibliographic_references" value="{{ obj.bibliographic_references }}">
+
+        <label for="handles">Handles:</label>
+        <input type="text" id="handles" name="handles" value="{{ obj.handles }}">
+
+        <label for="foot">Foot:</label>
+        <input type="text" id="foot" name="foot" value="{{ obj.foot }}">
+
+        <!-- Checkbox per booleani -->
+        <label for="decoration">Decoration:</label>
+        <input type="checkbox" id="decoration" name="decoration" {% if obj.decoration %}checked{% endif %}>
+
+        <label for="archaeometry_analyses">Archaeometry Analyses:</label>
+        <input type="checkbox" id="archaeometry_analyses" name="archaeometry_analyses" {% if obj.archaeometry_analyses %}checked{% endif %}>
+
+        <label for="stamp">Stamp:</label>
+        <input type="checkbox" id="stamp" name="stamp" {% if obj.stamp %}checked{% endif %}>
+
+        <label for="stamp_text">Stamp Text:</label>
+        <input type="text" id="stamp_text" name="stamp_text" value="{{ obj.stamp_text }}">
+
+        <!-- Coordinate -->
+        <label for="longitude_storing_place">Longitude Storing Place:</label>
+        <input type="text" id="longitude_storing_place" name="longitude_storing_place" value="{{ obj.longitude_storing_place }}">
+
+        <label for="latitude_storing_place">Latitude Storing Place:</label>
+        <input type="text" id="latitude_storing_place" name="latitude_storing_place" value="{{ obj.latitude_storing_place }}">
+
+        <label for="longitude_finding_spot">Longitude Finding Spot:</label>
+        <input type="text" id="longitude_finding_spot" name="longitude_finding_spot" value="{{ obj.longitude_finding_spot }}">
+
+        <label for="latitude_finding_spot">Latitude Finding Spot:</label>
+        <input type="text" id="latitude_finding_spot" name="latitude_finding_spot" value="{{ obj.latitude_finding_spot }}">
+
+        <!-- Pulsante per inviare il form -->
+        <button type="submit">Save Changes</button>
+    </form>
+
+    <!-- Form per l'upload delle immagini -->
+    <h3>Carica una nuova immagine</h3>
+    <form id="upload-form" enctype="multipart/form-data">
+        <input type="file" id="image" name="image" accept="image/*">
+        <button type="button" onclick="uploadImage({{ obj.id }})">Carica Immagine</button>
+    </form>
+
+    <div id="upload-message"></div>
+
+    <!-- Galleria immagini -->
+    <h3>Immagini esistenti</h3>
+    <div id="image-gallery">
+        {% for image in obj.images %}
+            <div>
+                <img src="{{ url_for('uploaded_file', filename=image.path) }}" width="200">
+                <button onclick="deleteImage({{ image.id }})">Elimina</button>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- JavaScript per gestire upload ed eliminazione -->
+    <script>
+    function uploadImage(objectId) {
+        let formData = new FormData();
+        let fileInput = document.getElementById('image');
+        
+        if (fileInput.files.length === 0) {
+            document.getElementById('upload-message').innerText = "Seleziona un file prima di caricare.";
+            return;
+        }
+        
+        formData.append("image", fileInput.files[0]);
+
+        fetch(`/upload_image/${objectId}`, {
+            method: "POST",
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('upload-message').innerText = "Immagine caricata con successo!";
+                // Aggiorna la galleria immagini
+                let imgElement = document.createElement('img');
+                imgElement.src = `/static/uploads/${data.image_path}`;
+                imgElement.width = 200;
+                document.getElementById('image-gallery').appendChild(imgElement);
+            } else {
+                document.getElementById('upload-message').innerText = "Errore: " + data.error;
+            }
+        })
+        .catch(error => console.error("Errore:", error));
+    }
+    </script>
+</body>
+</html>

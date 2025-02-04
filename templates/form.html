@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Database bronzi capuani</title>
+</head>
+<body>
+    <h1>Database dei bronzi capuani: inserisci un nuovo reperto</h1>
+    <form method="POST" action="{{ url_for('add_object') }}" enctype="multipart/form-data">
+        
+        <!-- Unique ID -->
+        <label for="unique_id">ID Unico:</label>
+        <input type="text" id="unique_id" name="unique_id" required><br><br>
+
+        <!-- Chronology -->
+        <label for="chronology">Cronologia:</label>
+        <input type="text" id="chronology" name="chronology"><br><br>
+
+        <!-- Shape -->
+        <label for="shape">Forma:</label>
+        <input type="text" id="shape" name="shape"><br><br>
+
+        <!-- Storing Place ID -->
+        <label for="storing_place_id">ID Luogo di Conservazione:</label>
+        <input type="number" id="storing_place_id" name="storing_place_id"><br><br>
+
+        <!-- Storing Place (Name) -->
+        <label for="storing_place">Luogo di Conservazione (Nome):</label>
+        <input type="text" id="storing_place" name="storing_place"><br><br>
+
+
+      <label for="longitude_storing_place">Longitudine del luogo di conservazione:</label>
+    <input type="text" step="any" name="longitude_storing_place" id="longitude_storing_place"><br><br>
+
+
+    <label for="latitude_storing_place">Latitudine del luogo di conservazione:</label>
+    <input type="text" step="any" name="latitude_storing_place" id="latitude_storing_place"><br><br>
+
+<!-- Inventory Number -->
+        <label for="inventory_number">Numero di Inventario:</label>
+        <input type="text" id="inventory_number" name="inventory_number"><br><br>
+
+
+<!-- Finding Spot ID -->
+        <label for="finding_spot_id">ID Luogo di Ritrovamento:</label>
+        <input type="number" id="finding_spot_id" name="finding_spot_id"><br><br>
+
+        <!-- Finding Spot (Name) -->
+        <label for="finding_spot">Luogo di Ritrovamento (Nome):</label>
+        <input type="text" id="finding_spot" name="finding_spot"><br><br>
+
+<label for="longitude_finding_spot">Longitudine del luogo di ritrovamento:</label>
+    <input type="text" step="any" name="longitude_finding_spot" id="longitude_finding_spot"><br><br>
+
+    <label for="latitude_finding_spot">Latitudine del luogo di ritrovamento:</label>
+    <input type="text" step="any" name="latitude_finding_spot" id="latitude_finding_spot"><br><br>
+
+        
+        <!-- Bibliographical Source -->
+        <label for="bibliographical_source">Fonte Bibliografica:</label>
+        <input type="text" id="bibliographical_source" name="bibliographical_source"><br><br>
+
+        <!-- Dimensions -->
+        <label for="dimensions">Dimensioni:</label>
+        <input type="text" id="dimensions" name="dimensions"><br><br>
+
+        <!-- Description -->
+        <label for="description">Descrizione:</label>
+        <textarea id="description" name="description"></textarea><br><br>
+
+        <!-- Production Place -->
+        <label for="production_place">Luogo di Produzione:</label>
+        <input type="text" id="production_place" name="production_place"><br><br>
+
+        <!-- Typology -->
+        <label for="typology">Tipologia:</label>
+        <input type="text" id="typology" name="typology"><br><br>
+
+        <!-- Bibliographic References -->
+        <label for="bibliographic_references">Riferimenti Bibliografici:</label>
+        <input type="text" id="bibliographic_references" name="bibliographic_references"><br><br>
+
+        <!-- Handles -->
+        <label for="handles">Anse/manici:</label>
+        <input type="text" id="handles" name="handles"><br><br>
+
+        <!-- Foot -->
+        <label for="foot">Base/piede:</label>
+        <input type="text" id="foot" name="foot"><br><br>
+
+        <!-- Decoration -->
+        <label for="decoration">Decorazione:</label>
+        <input type="checkbox" id="decoration" name="decoration"><br><br>
+
+        <!-- Decoration Techniques -->
+        <label for="decoration_techniques">Tecniche decorative:</label>
+        <input type="text" id="decoration_techniques" name="decoration_techniques"><br><br>
+
+        <!-- Iconography -->
+        <label for="iconography">Iconografia:</label>
+        <input type="text" id="iconography" name="iconography"><br><br>
+
+        <!-- Manufacturing Techniques -->
+        <label for="manufacturing_techniques">Tecniche produttive:</label>
+        <input type="text" id="manufacturing_techniques" name="manufacturing_techniques"><br><br>
+
+        <!-- Archaeometry Analyses -->
+        <label for="archaeometry_analyses">Analisi Archeometriche:</label>
+        <input type="checkbox" id="archaeometry_analyses" name="archaeometry_analyses"><br><br>
+
+        <!-- Type of Analysis -->
+        <label for="type_of_analysis">Tipo di Analisi:</label>
+        <input type="text" id="type_of_analysis" name="type_of_analysis"><br><br>
+
+        <!-- Raw Materials -->
+        <label for="raw_materials">Materie Prime:</label>
+        <input type="text" id="raw_materials" name="raw_materials"><br><br>
+
+        <!-- Provenance -->
+        <label for="provenance">Provenienza:</label>
+        <input type="text" id="provenance" name="provenance"><br><br>
+
+        <!-- Other Information -->
+        <label for="other_info">Altre Informazioni:</label>
+        <textarea id="other_info" name="other_info"></textarea><br><br>
+
+        <!-- Stamp -->
+        <label for="stamp">Bollo:</label>
+        <input type="checkbox" id="stamp" name="stamp"><br><br>
+
+        <!-- Stamp Text -->
+        <label for="stamp_text">Testo del Bollo:</label>
+        <input type="text" id="stamp_text" name="stamp_text"><br><br>
+    
+    <label for="image1">First Image (optional):</label>
+    <input type="file" id="image1" name="images" accept="image/*">
+
+    <label for="image2">Second Image (optional):</label>
+    <input type="file" id="image2" name="images" accept="image/*">
+        
+        <!-- Submit Button -->
+        <button type="submit">Inserisci</button>
+    </form>
+</body>
+</html>

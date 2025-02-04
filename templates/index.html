@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database produzione bronzea capuana</title>
+</head>
+<body>
+    <h1>Oggetti Archeologici</h1>
+
+    <table border="1">
+        <tr>
+            <th>ID Unico</th>
+            <th>Cronologia</th>
+            <th>Forma</th>
+            <th>Luogo di Conservazione</th>
+            <th>Numero d'Inventario</th>
+            <th>Luogo di Ritrovamento</th>
+            <th>Fonte Bibliografica</th>
+            <th>Dimensioni</th>
+            <th>Descrizione</th>
+            <th>Luogo di Produzione</th>
+            <th>Tipologia</th>
+            <th>Riferimenti Bibliografici</th> <!-- Nuovo campo -->
+            <th>Manici</th>
+            <th>Base</th>
+            <th>Decorazione</th>
+            <th>Tecniche di Decorazione</th>
+            <th>Iconografia</th>
+            <th>Tecniche di Fabbricazione</th>
+            <th>Analisi Archeometriche</th>
+            <th>Tipo di Analisi</th>
+            <th>Materie Prime</th>
+            <th>Provenienza</th>
+            <th>Altre Informazioni</th>
+            <th>Timbro</th>
+            <th>Testo Timbro</th>
+        </tr>
+        
+        {% for obj in objects %}
+        <tr>
+            <td>{{ obj.unique_id }}</td>
+            <td>{{ obj.chronology }}</td>
+            <td>{{ obj.shape }}</td>
+            <td>{{ obj.storing_place_id }}</td>
+            <td>{{ obj.inventory_number }}</td>
+            <td>{{ obj.finding_spot_id }}</td>
+            <td>{{ obj.bibliographical_source }}</td>
+            <td>{{ obj.dimensions }}</td>
+            <td>{{ obj.description }}</td>
+            <td>{{ obj.production_place }}</td>
+            <td>{{ obj.typology }}</td>
+            <td>{{ obj.bibliographic_references }}</td> <!-- Nuovo campo -->
+            <td>{{ obj.handles }}</td>
+            <td>{{ obj.foot }}</td>
+            <td>{{ obj.decoration }}</td>
+            <td>{{ obj.decoration_techniques }}</td>
+            <td>{{ obj.iconography }}</td>
+            <td>{{ obj.manufacturing_techniques }}</td>
+            <td>{{ obj.archaeometry_analyses }}</td>
+            <td>{{ obj.type_of_analysis }}</td>
+            <td>{{ obj.raw_materials }}</td>
+            <td>{{ obj.provenance }}</td>
+            <td>{{ obj.other_info }}</td>
+            <td>{{ obj.stamp }}</td>
+            <td>{{ obj.stamp_text }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
