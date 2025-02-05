@@ -15,7 +15,7 @@ app = Flask(__name__)
 app.secret_key = 'una_chiave_segreta_molto_sicura'
 
 # Database configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg://postgres:Nerina666@localhost:5433/archaeology'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:bronzi_capuani_db@db.aaakrbnlkgljvaksjxvv.supabase.co:5432/postgres'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 UPLOAD_FOLDER = os.path.join(os.getcwd(), 'static', 'uploads')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER  # Folder for uploading files
