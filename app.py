@@ -10,6 +10,7 @@ from geoalchemy2.elements import WKTElement
 from db_utils import init_session, get_geodata
 from gis_utils import generate_map
 
+
 # Initialize the Flask app
 app = Flask(__name__)
 app.secret_key = 'una_chiave_segreta_molto_sicura'
@@ -31,7 +32,7 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # Models
-class images(db.Model):
+class Images(db.Model):
     __tablename__ = 'images'
     id = db.Column(db.Integer, primary_key=True)
     path = db.Column(db.String(255), nullable=False)
@@ -74,7 +75,7 @@ class ArchaeologicalObject(db.Model):
     latitude_finding_spot = db.Column(db.Float, nullable=True)
     storing_place_location = db.Column(Geometry(geometry_type='POINT', srid=4326), nullable=True)
     finding_spot_location = db.Column(Geometry(geometry_type='POINT', srid=4326), nullable=True)
-    images = db.relationship('images', back_populates='archaeological_object')
+    images = db.relationship('Images', back_populates='archaeological_object')
 
 @app.route('/add_object', methods=['POST'])
 def add_object():
@@ -141,7 +142,7 @@ def add_object():
 
                
                 # Save the image path to the database
-                new_image = images(
+                new_image = Images(
                     path=filename,  # Save normalized relative path
                     archaeological_object_id=new_object.id
                 )
@@ -161,7 +162,7 @@ def uploaded_file(filename):
 @app.route('/view_data')
 def view_data():
     archaeological_objects = ArchaeologicalObject.query.all()
-    images_data = images.query.all()
+    images_data = Images.query.all()
     return render_template('view_data.html', archaeological_objects=archaeological_objects, images=images_data)
 
 @app.route('/edit_object/<int:id>', methods=['GET', 'POST'])
@@ -225,7 +226,7 @@ def edit_object(id):
 def delete_image(image_id):
     session = db.session
     try:
-        image = session.get(images, image_id)
+        image = session.get(Images, image_id)
         if not image:
             flash('Image not found', 'error')
             return redirect(url_for('view_data'))
@@ -271,7 +272,7 @@ def add_image(object_id):
 
             # Usa SQLAlchemy per gestire la connessione e salvare il record nel database
             session = db.session
-            new_image = images(
+            new_image = Images(
                 path=filename,
                 archaeological_object_id=object_id
             )
@@ -337,47 +338,86 @@ def map_view():
 from sqlalchemy.sql import text
 
 @app.route('/search', methods=['POST'])
-def search():
-    session = db.session
-    try:
-        # Estrai i filtri dal corpo della richiesta
-        filters = request.get_json()
-        if not isinstance(filters, dict):
-            return jsonify({'error': 'Invalid input format, expected JSON object'}), 400
+def search_objects():
+    filters = request.get_json()
 
-        # Costruisci la query dinamica
-        query = "SELECT * FROM archaeological_objects WHERE 1=1"
-        params = {}
+    query = db.session.query(ArchaeologicalObject).outerjoin(Images)
 
-        for field, value in filters.items():
-            if field in ['decoration', 'archaeometry_analyses', 'stamp']:  # Campi booleani
-                # Converti valori booleani da stringhe a True/False
-                if value.lower() in ['sì', 'true', 'yes']:
-                    value = True
-                elif value.lower() in ['no', 'false']:
-                    value = False
-                else:
-                    return jsonify({'error': f"Invalid value for boolean field '{field}': {value}"}), 400
-                
-                query += f" AND {field} = :{field}"
-                params[field] = value
-            else:
-                # Per altri campi, usa una ricerca parziale
-                query += f" AND {field} ILIKE :{field}"
-                params[field] = f"%{value}%"
+    # Filtri testuali
+    if filters.get("chronology"):
+        query = query.filter(ArchaeologicalObject.chronology.ilike(f"%{filters['chronology']}%"))
+    if filters.get("shape"):
+        query = query.filter(ArchaeologicalObject.shape.ilike(f"%{filters['shape']}%"))
+    if filters.get("storing_place"):
+        query = query.filter(ArchaeologicalObject.storing_place.ilike(f"%{filters['storing_place']}%"))
+    if filters.get("finding_spot"):
+        query = query.filter(ArchaeologicalObject.finding_spot.ilike(f"%{filters['finding_spot']}%"))
+    if filters.get("production_place"):
+        query = query.filter(ArchaeologicalObject.production_place.ilike(f"%{filters['production_place']}%"))
+    if filters.get("typology"):
+        query = query.filter(ArchaeologicalObject.typology.ilike(f"%{filters['typology']}%"))
+    if filters.get("decoration_techniques"):
+        query = query.filter(ArchaeologicalObject.decoration_techniques.ilike(f"%{filters['decoration_techniques']}%"))
+    if filters.get("iconography"):
+        query = query.filter(ArchaeologicalObject.iconography.ilike(f"%{filters['iconography']}%"))
+    if filters.get("manufacturing_techniques"):
+        query = query.filter(ArchaeologicalObject.manufacturing_techniques.ilike(f"%{filters['manufacturing_techniques']}%"))
+    if filters.get("type_of_analysis"):
+        query = query.filter(ArchaeologicalObject.type_of_analysis.ilike(f"%{filters['type_of_analysis']}%"))
+    if filters.get("stamp_text"):
+        query = query.filter(ArchaeologicalObject.stamp_text.ilike(f"%{filters['stamp_text']}%"))
 
-        # Esegui la query
-        results = session.execute(text(query), params).fetchall()
-        data = [dict(row) for row in results]
+    # Filtri Booleani
+    if "decoration" in filters:
+        query = query.filter(ArchaeologicalObject.decoration == (filters["decoration"].lower() == "true"))
+    if "archaeometry_analyses" in filters:
+        query = query.filter(ArchaeologicalObject.archaeometry_analyses == (filters["archaeometry_analyses"].lower() == "true"))
+    if "stamp" in filters:
+        query = query.filter(ArchaeologicalObject.stamp == (filters["stamp"].lower() == "true"))
 
-        return jsonify(data)
+    # Esegui la query
+    results = query.all()
 
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-    finally:
-        session.close()
+    # Prepara i risultati per la risposta JSON
+    results_list = []
+    for obj in results:
+        results_list.append({
+            "id": obj.id,
+            "unique_id": obj.unique_id,
+            "chronology": obj.chronology,
+            "shape": obj.shape,
+            "storing_place_id": obj.storing_place_id,
+            "storing_place": obj.storing_place,
+            "longitude_storing_place": obj.longitude_storing_place,
+            "latitude_storing_place": obj.latitude_storing_place,
+            "inventory_number": obj.inventory_number,
+            "finding_spot_id": obj.finding_spot_id,
+            "finding_spot": obj.finding_spot,
+            "longitude_finding_spot": obj.longitude_finding_spot,
+            "latitude_finding_spot": obj.latitude_finding_spot,
+            "bibliographical_source": obj.bibliographical_source,
+            "dimensions": obj.dimensions,
+            "description": obj.description,
+            "production_place": obj.production_place,
+            "typology": obj.typology,
+            "bibliographic_references": obj.bibliographic_references,
+            "handles": obj.handles,
+            "foot": obj.foot,
+            "decoration": obj.decoration,
+            "decoration_techniques": obj.decoration_techniques,
+            "iconography": obj.iconography,
+            "manufacturing_techniques": obj.manufacturing_techniques,
+            "archaeometry_analyses": obj.archaeometry_analyses,
+            "type_of_analysis": obj.type_of_analysis,
+            "raw_materials": obj.raw_materials,
+            "provenance": obj.provenance,
+            "other_info": obj.other_info,
+            "stamp": obj.stamp,
+            "stamp_text": obj.stamp_text,
+            "images": [img.path for img in obj.images]  # Aggiungi le immagini
+        })
 
-
+    return jsonify(results_list)
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()

@@ -24,15 +24,6 @@ def init_session():
     return Session()
 
 def get_geodata(session):
-    """
-    Recupera dati geografici e le immagini dal database.
-
-    Args:
-        session: Oggetto sessione di SQLAlchemy.
-
-    Returns:
-        Una lista di oggetti contenenti dati geografici e immagini.
-    """
     try:
         query = text("""
             SELECT 
@@ -69,7 +60,6 @@ def get_geodata(session):
             LEFT JOIN images img ON ao.id = img.archaeological_object_id
         """)
 
-        # Usa mappings() per ottenere i risultati come dizionari
         results = session.execute(query).mappings().fetchall()
 
         geodata = []
@@ -117,7 +107,6 @@ def get_geodata(session):
         return geodata
     finally:
         session.close()
-
 
 if __name__ == "__main__":
     # Test del recupero dei dati

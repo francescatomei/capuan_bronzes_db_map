@@ -14,6 +14,7 @@ def generate_map(geodata):
     """
     # Crea una mappa centrata
     mymap = folium.Map(location=[41.8719, 12.5674], zoom_start=6)
+    mymap.get_root().html.add_child(Element('<div id="map"></div>'))  # Aggiungi un ID alla mappa
 
     # Crea i gruppi per i due livelli
     storing_layer = FeatureGroup(name="Luoghi di conservazione", control=True)
@@ -26,8 +27,13 @@ def generate_map(geodata):
 
     for obj in geodata:
         # Decodifica le geometrie
-        storing_point = wkb_loads(obj['storing_place_location'], hex=True) if obj['storing_place_location'] else None
-        finding_point = wkb_loads(obj['finding_spot_location'], hex=True) if obj['finding_spot_location'] else None
+        storing_point = None
+        finding_point = None
+
+        if 'storing_place_location' in obj and obj['storing_place_location']:
+            storing_point = wkb_loads(obj['storing_place_location'], hex=True)
+        if 'finding_spot_location' in obj and obj['finding_spot_location']:
+            finding_point = wkb_loads(obj['finding_spot_location'], hex=True)
 
         # Ignora punti con coordinate nulle o zero
         if storing_point and (storing_point.x != 0 and storing_point.y != 0):
@@ -37,6 +43,8 @@ def generate_map(geodata):
         if finding_point and (finding_point.x != 0 and finding_point.y != 0):
             finding_spots[(finding_point.y, finding_point.x)].append(obj)
             markers.append({"unique_id": obj['unique_id'], "latitude": finding_point.y, "longitude": finding_point.x})
+
+    # ... (resto del codice rimane invariato)
 
     # Funzione per costruire i popup
     def create_popup(objects, title):
@@ -140,9 +148,88 @@ def generate_map(geodata):
     </div>
     <script>
         const markers = {markers};
+
         function toggleSearchPanel() {{
             const panel = document.getElementById('search-panel');
             panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        }}
+
+        function executeSearch() {{
+            const filters = {{
+                chronology: document.getElementById('search-chronology').value.trim(),
+                shape: document.getElementById('search-shape').value.trim(),
+                storing_place: document.getElementById('search-storing_place').value.trim(),
+                finding_spot: document.getElementById('search-finding_spot').value.trim(),
+                production_place: document.getElementById('search-production_place').value.trim(),
+                typology: document.getElementById('search-typology').value.trim(),
+                handles: document.getElementById('search-handles').value.trim(),
+                foot: document.getElementById('search-foot').value.trim(),
+                decoration: document.getElementById('search-decoration').value.trim(),
+                decoration_techniques: document.getElementById('search-decoration-techniques').value.trim(),
+                iconography: document.getElementById('search-iconography').value.trim(),
+                manufacturing_techniques: document.getElementById('search-manufacturing-techniques').value.trim(),
+                archaeometry_analyses: document.getElementById('search-archaeometry-analyses').value.trim(),
+                type_of_analysis: document.getElementById('search-type-of-analysis').value.trim(),
+                stamp: document.getElementById('search-stamp').value.trim(),
+                stamp_text: document.getElementById('search-stamp-text').value.trim()
+            }};
+
+            fetch('/search', {{
+                method: 'POST',
+                headers: {{ 'Content-Type': 'application/json' }},
+                body: JSON.stringify(filters)
+            }})
+            .then(response => response.json())
+            .then(data => {{
+                const resultsContainer = document.getElementById('search-results');
+                resultsContainer.innerHTML = "<h5>Risultati:</h5>";
+
+                if (data.length === 0) {{
+                    resultsContainer.innerHTML += "<p>Nessun risultato trovato</p>";
+                    return;
+                }}
+
+                let table = "<table border='1' style='width:100%;'>";
+                table += `
+                    <tr>
+                        <th>ID Unico</th>
+                        <th>Cronologia</th>
+                        <th>Forma</th>
+                        <th>Luogo di Conservazione</th>
+                        <th>Luogo di Ritrovamento</th>
+                        <th>Azioni</th>
+                    </tr>
+                `;
+
+                data.forEach(obj => {{
+                    table += `
+                        <tr>
+                            <td>${{obj.unique_id}}</td>
+                            <td>${{obj.chronology || "N/A"}}</td>
+                            <td>${{obj.shape || "N/A"}}</td>
+                            <td>${{obj.storing_place || "N/A"}}</td>
+                            <td>${{obj.finding_spot || "N/A"}}</td>
+                            <td>
+                                <button onclick="centerMap(${{obj.latitude}}, ${{obj.longitude}})">Mostra sulla mappa</button>
+                            </td>
+                        </tr>
+                    `;
+                }});
+
+                table += "</table>";
+                resultsContainer.innerHTML += table;
+            }})
+            .catch(error => console.error('Errore:', error));
+        }}
+
+        function centerMap(latitude, longitude) {{
+            // Accedi alla mappa tramite l'ID
+            const mapElement = document.getElementById('map');
+            if (mapElement && mapElement._map) {{
+                mapElement._map.setView([latitude, longitude], 15) // Zoom a 15
+            }} else {{
+                console.error("Mappa non trovata o non accessibile.");
+            }}
         }}
     </script>
     """

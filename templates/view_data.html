@@ -4,60 +4,239 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Database Bronzi Capuani</title>
-    <style>
-        .responsive-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-        }
-        .responsive-table th, .responsive-table td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        .responsive-table th {
-            background-color: #f4f4f4;
-            font-weight: bold;
-        }
-        .search-bar {
-            margin-bottom: 10px;
-            padding: 8px;
-            width: 100%;
-            font-size: 16px;
-        }
-        /* Tabella immagini */
-        .image-table {
-            width: auto; /* Adatta la larghezza al contenuto */
-            border-collapse: collapse;
-            margin: 10px 0;
-        }
-        .image-table th, .image-table td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: center;
-        }
-        .image-table img {
-            max-width: 150px; /* Larghezza massima */
-            max-height: 150px; /* Altezza massima */
-            height: auto; /* Mantiene il rapporto di aspetto */
-            width: auto; /* Mantiene il rapporto di aspetto */
-        }
-        @media screen and (max-width: 768px) {
-            .responsive-table {
-                font-size: 12px;
-            }
-            .responsive-table th, .responsive-table td {
-                padding: 5px;
-            }
-        }
-    </style>
+<style>
+    .responsive-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+        table-layout: auto;
+    }
+    .responsive-table th, .responsive-table td {
+        border: 1px solid #ddd;
+        padding: 5px;
+        text-align: left;
+    }
+    .responsive-table th {
+        background-color: #f4f4f4;
+        font-weight: bold;
+    }
+    .image-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        justify-content: flex-start;
+    }
+    .image-container img {
+        max-width: 100px; /* Riduci la dimensione delle immagini */
+        max-height: 100px;
+        height: auto;
+        width: auto;
+        cursor: pointer; /* Cambia il cursore per indicare che l'immagine è cliccabile */
+        transition: transform 0.2s ease; /* Aggiungi un'animazione di transizione */
+    }
+    .image-container img.zoomed {
+        transform: scale(2); /* Zoom dell'immagine al click */
+    }
+</style>
+<script>
+    // Funzione per gestire lo zoom delle immagini
+    document.addEventListener('DOMContentLoaded', function () {
+        const images = document.querySelectorAll('.image-container img');
+        images.forEach(img => {
+            img.addEventListener('click', function () {
+                this.classList.toggle('zoomed'); // Aggiunge o rimuove la classe 'zoomed'
+            });
+        });
+    });
+</script>
 </head>
 <body>
     <h1>Bronzi Capuani</h1>
 
-    <!-- Barra di ricerca -->
-    <input type="text" id="searchInput" class="search-bar" placeholder="Cerca nella tabella...">
+    <!-- Barra di Ricerca -->
+    <form id="search-form" class="search-container">
+        <select id="search-chronology">
+            <option value="">Cronologia</option>
+            <option value="I sec. a.C.">I sec. a.C.</option>
+            <option value="I sec. d.C.">I sec. d.C.</option>
+            <option value="II sec. d.C.">II sec. d.C.</option>
+            <option value="III sec. d.C.">III sec. d.C.</option>
+        </select>
+        <select id="search-shape">
+            <option value="">Forma</option>
+            <option value="casseruola">Casseruola</option>
+            <option value="coppa a becco">Coppa a becco</option>
+            <option value="brocca">Brocca</option>
+            <option value="brocca monoansata">Brocca monoansata</option>
+            <option value="brocca a bocca trilobata">Brocca a bocca trilobata</option>
+            <option value="situla">Situla</option>
+            <option value="piede a forma di pelta">Piede a forma di pelta</option>
+            <option value="patera">Patera</option>
+            <option value="piede di situla">Piede di situla</option>
+            <option value="manico di casseruola">Manico di casseruola</option>
+            <option value="manico di patera">Manico di patera</option>
+            <option value="mestolo">Mestolo</option>
+            <option value="bacino">Bacino</option>
+            <option value="colino">Colino</option>
+            <option value="calderone">Calderone</option>
+        </select>
+        <input type="text" id="search-storing_place" placeholder="Luogo di Conservazione">
+        <input type="text" id="search-finding_spot" placeholder="Luogo di Ritrovamento">
+        <input type="text" id="search-production_place" placeholder="Luogo di Produzione">
+        <input type="text" id="search-typology" placeholder="Tipologia">
+        <input type="text" id="search-decoration_techniques" placeholder="Tecniche Decorative">
+        <input type="text" id="search-iconography" placeholder="Iconografia">
+        <input type="text" id="search-manufacturing_techniques" placeholder="Tecniche Produttive">
+        <input type="text" id="search-type_of_analysis" placeholder="Tipo di Analisi">
+        <input type="text" id="search-stamp_text" placeholder="Testo del Bollo">
 
+        <!-- Campi Booleani -->
+        <label>
+            <input type="checkbox" id="search-decoration"> Decorazione
+        </label>
+        <label>
+            <input type="checkbox" id="search-archaeometry_analyses"> Analisi Archeometriche
+        </label>
+        <label>
+            <input type="checkbox" id="search-stamp"> Bollo
+        </label>
+
+        <button type="button" onclick="executeSearch()">Cerca</button>
+    </form>
+
+    <div id="search-results"></div>
+<script>
+function executeSearch() {
+    const filters = {
+        chronology: document.getElementById('search-chronology').value.trim(),
+        shape: document.getElementById('search-shape').value.trim(),
+        storing_place: document.getElementById('search-storing_place').value.trim(),
+        finding_spot: document.getElementById('search-finding_spot').value.trim(),
+        production_place: document.getElementById('search-production_place').value.trim(),
+        typology: document.getElementById('search-typology').value.trim(),
+        decoration_techniques: document.getElementById('search-decoration_techniques').value.trim(),
+        iconography: document.getElementById('search-iconography').value.trim(),
+        manufacturing_techniques: document.getElementById('search-manufacturing_techniques').value.trim(),
+        type_of_analysis: document.getElementById('search-type_of_analysis').value.trim(),
+        stamp_text: document.getElementById('search-stamp_text').value.trim(),
+
+        // Campi Booleani
+        decoration: document.getElementById('search-decoration').checked ? "true" : "false",
+        archaeometry_analyses: document.getElementById('search-archaeometry_analyses').checked ? "true" : "false",
+        stamp: document.getElementById('search-stamp').checked ? "true" : "false"
+    };
+
+    fetch('/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(filters)
+    })
+    .then(response => response.json())
+    .then(data => {
+        let resultsContainer = document.getElementById('search-results');
+        resultsContainer.innerHTML = "<h3>Risultati:</h3>";
+
+        if (data.length === 0) {
+            resultsContainer.innerHTML += "<p>Nessun risultato trovato</p>";
+            return;
+        }
+
+        // Costruisci la tabella completa con tutti i campi
+        let table = `
+            <table border='1' class="responsive-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>ID Unico</th>
+                        <th>Cronologia</th>
+                        <th>Forma</th>
+                        <th>ID Luogo di Conservazione</th>
+                        <th>Luogo di Conservazione</th>
+                        <th>Longitudine del luogo di conservazione</th>
+                        <th>Latitudine del luogo di conservazione</th>
+                        <th>Numero di Inventario</th>
+                        <th>ID Luogo di Ritrovamento</th>
+                        <th>Luogo di Ritrovamento</th>
+                        <th>Longitudine del luogo di ritrovamento</th>
+                        <th>Latitudine del luogo di ritrovamento</th>
+                        <th>Fonte Bibliografica</th>
+                        <th>Dimensioni</th>
+                        <th>Descrizione</th>
+                        <th>Luogo di Produzione</th>
+                        <th>Tipologia</th>
+                        <th>Riferimenti Bibliografici</th>
+                        <th>Anse/manici</th>
+                        <th>Base/piede</th>
+                        <th>Decorazione</th>
+                        <th>Tecniche decorative</th>
+                        <th>Iconografia</th>
+                        <th>Tecniche produttive</th>
+                        <th>Analisi Archeometriche</th>
+                        <th>Tipo di Analisi</th>
+                        <th>Materie Prime</th>
+                        <th>Provenienza</th>
+                        <th>Altre Informazioni</th>
+                        <th>Bollo</th>
+                        <th>Testo del Bollo</th>
+                        <th>Immagini</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        data.forEach(obj => {
+            // Costruisci le immagini
+            let imagesHtml = obj.images ? obj.images.map(img => `
+                <div>
+                    <img src="/uploads/${img}" width="50" height="50">
+                </div>
+            `).join(" ") : "N/A";
+
+            // Aggiungi una riga per ogni risultato
+            table += `
+                <tr>
+                    <td>${obj.id || "N/A"}</td>
+                    <td>${obj.unique_id || "N/A"}</td>
+                    <td>${obj.chronology || "N/A"}</td>
+                    <td>${obj.shape || "N/A"}</td>
+                    <td>${obj.storing_place_id || "N/A"}</td>
+                    <td>${obj.storing_place || "N/A"}</td>
+                    <td>${obj.longitude_storing_place || "N/A"}</td>
+                    <td>${obj.latitude_storing_place || "N/A"}</td>
+                    <td>${obj.inventory_number || "N/A"}</td>
+                    <td>${obj.finding_spot_id || "N/A"}</td>
+                    <td>${obj.finding_spot || "N/A"}</td>
+                    <td>${obj.longitude_finding_spot || "N/A"}</td>
+                    <td>${obj.latitude_finding_spot || "N/A"}</td>
+                    <td>${obj.bibliographical_source || "N/A"}</td>
+                    <td>${obj.dimensions || "N/A"}</td>
+                    <td>${obj.description || "N/A"}</td>
+                    <td>${obj.production_place || "N/A"}</td>
+                    <td>${obj.typology || "N/A"}</td>
+                    <td>${obj.bibliographic_references || "N/A"}</td>
+                    <td>${obj.handles || "N/A"}</td>
+                    <td>${obj.foot || "N/A"}</td>
+                    <td>${obj.decoration || "N/A"}</td>
+                    <td>${obj.decoration_techniques || "N/A"}</td>
+                    <td>${obj.iconography || "N/A"}</td>
+                    <td>${obj.manufacturing_techniques || "N/A"}</td>
+                    <td>${obj.archaeometry_analyses || "N/A"}</td>
+                    <td>${obj.type_of_analysis || "N/A"}</td>
+                    <td>${obj.raw_materials || "N/A"}</td>
+                    <td>${obj.provenance || "N/A"}</td>
+                    <td>${obj.other_info || "N/A"}</td>
+                    <td>${obj.stamp || "N/A"}</td>
+                    <td>${obj.stamp_text || "N/A"}</td>
+                    <td>${imagesHtml}</td>
+                </tr>
+            `;
+        });
+
+        table += "</tbody></table>";
+        resultsContainer.innerHTML += table;
+    })
+    .catch(error => console.error('Errore:', error));
+}</script>
     <!-- Tabella principale -->
     <table id="dataTable" class="responsive-table">
         <thead>
@@ -97,7 +276,7 @@
                 <th>Azioni</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody id="data-body">
             {% for obj in archaeological_objects %}
             <tr>
                 <td>{{ obj.id }}</td>
@@ -132,81 +311,28 @@
                 <td>{{ obj.other_info }}</td>
                 <td>{{ obj.stamp }}</td>
                 <td>{{ obj.stamp_text }}</td>
-                <td class="actions">
-                    <a href="{{ url_for('edit_object', id=obj.id) }}">Modifica</a>
+                <td>
+                    <div class="image-container">
+                        {% for img in images %}
+                            {% if img.archaeological_object_id == obj.id %}
+                                <div>
+                                    <img src="{{ url_for('uploaded_file', filename=img.path) }}" alt="Immagine {{ img.id }}">
+                                    <form action="{{ url_for('delete_image', image_id=img.id) }}" method="post" style="display:inline;">
+                                        <button type="submit">Elimina</button>
+                                    </form>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <form action="{{ url_for('add_image', object_id=obj.id) }}" method="post" enctype="multipart/form-data">
+                        <input type="file" name="new_image" accept="image/*">
+                        <button type="submit">Carica</button>
+                    </form>
                 </td>
-            </tr>
-            
-            <!-- Sezione immagini -->
-            <tr>
-                <td colspan="33">
-                    <h3>Immagini per {{ obj.unique_id }}</h3>
-                    <table class="image-table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Immagine</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for img in images %}
-                                {% if img.archaeological_object_id == obj.id %}
-                                <tr>
-                                    <td>{{ img.id }}</td>
-                                    <td>
-                                        <img src="{{ url_for('uploaded_file', filename=img.path) }}" alt="Immagine {{ img.id }}">
-                                    </td>
-                                </tr>
-
-                  </td>
-                        <td>
-                            <!-- Pulsante di modifica (può essere migliorato per gestire modifiche specifiche) -->
-                            <form action="{{ url_for('delete_image', image_id=img.id) }}" method="post" style="display:inline;">
-                                <button type="submit">Elimina</button>
-                            </form>
-                        </td>
-                    </tr>         
-                <tr>
-                    <td colspan="3">
-                        <form action="{{ url_for('add_image', object_id=obj.id) }}" method="post" enctype="multipart/form-data">
-                            <label for="newImage">Aggiungi nuova immagine:</label>
-                            <input type="file" name="new_image" id="newImage" accept="image/*" required>
-                            <button type="submit">Carica</button>
-                        </form>
-                    </td>
-                </tr>
-                    
-                                {% endif %}
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </td>
+                <td><a href="{{ url_for('edit_object', id=obj.id) }}">Modifica</a></td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
-
-    <!-- Script per la barra di ricerca -->
-    <script>
-        document.getElementById('searchInput').addEventListener('keyup', function() {
-            let filter = this.value.toUpperCase();
-            let table = document.getElementById('dataTable');
-            let rows = table.getElementsByTagName('tr');
-
-            for (let i = 1; i < rows.length; i++) {
-                let cells = rows[i].getElementsByTagName('td');
-                let match = false;
-
-                for (let j = 0; j < cells.length; j++) {
-                    if (cells[j] && cells[j].innerText.toUpperCase().indexOf(filter) > -1) {
-                        match = true;
-                        break;
-                    }
-                }
-
-                rows[i].style.display = match ? '' : 'none';
-            }
-        });
-    </script>
 </body>
 </html>
