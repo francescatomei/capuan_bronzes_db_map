@@ -10,8 +10,8 @@ from sqlalchemy.orm import sessionmaker
 from shapely.wkb import loads as wkb_loads
 
 # Configurazione del database
-DATABASE_URL = 'postgresql+psycopg://capuan_bronzes_owner:npg_r6HTmaW9XPOg@ep-morning-frost-a2jog6ch-pooler.eu-central-1.aws.neon.tech/capuan_bronzes?sslmode=require'
-UPLOAD_FOLDER = 'C:/Users/franc/Projects/archaeology_project/static/uploads'
+DATABASE_URL = 'postgresql+psycopg2://capuan_bronzes_owner:npg_r6HTmaW9XPOg@ep-morning-frost-a2jog6ch-pooler.eu-central-1.aws.neon.tech/capuan_bronzes'
+UPLOAD_FOLDER = 'https://github.com/francescatomei/capuan_bronzes_db_map/tree/main/static/uploads'
 
 # Creazione del motore e del sessionmaker
 engine = create_engine(DATABASE_URL)
@@ -98,7 +98,7 @@ def get_geodata(session):
             # Gestisci le immagini
             image_path = row["image_path"]
             if image_path:
-                full_image_path = os.path.join(UPLOAD_FOLDER, image_path)
+                full_image_path = f"{UPLOAD_FOLDER}/{image_path}"
                 if os.path.exists(full_image_path):
                     obj.setdefault("images", []).append(image_path)
 
