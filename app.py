@@ -16,7 +16,7 @@ app = Flask(__name__)
 app.secret_key = 'una_chiave_segreta_molto_sicura'
 
 # Database configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg://postgres:bronzi_capua_@localhost:5433/archaeology'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg://capuan_bronzes_owner:npg_r6HTmaW9XPOg@ep-morning-frost-a2jog6ch-pooler.eu-central-1.aws.neon.tech/capuan_bronzes?sslmode=require'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 UPLOAD_FOLDER = os.path.join(os.getcwd(), 'static', 'uploads')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER  # Folder for uploading files
@@ -418,6 +418,17 @@ def search_objects():
         })
 
     return jsonify(results_list)
+
+@app.route('/test_db')
+def test_db():
+    with app.app_context():  # Assicura il contesto dell'app Flask
+        try:
+            result = db.session.execute(text("SELECT COUNT(*) FROM archaeological_objects"))
+            count = result.scalar()  # Ottiene il valore numerico del conteggio
+            return f"✅ Totale record in archaeological_objects: {count}"
+        except Exception as e:
+            return f"❌ Errore di connessione al database: {e}"
+
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
