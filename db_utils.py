@@ -10,7 +10,7 @@ from sqlalchemy.orm import sessionmaker
 from shapely.wkb import loads as wkb_loads
 
 # Configurazione del database
-DATABASE_URL = 'postgresql+psycopg://postgres:Nerina666@localhost:5433/archaeology'
+DATABASE_URL = 'postgresql+psycopg://capuan_bronzes_owner:npg_r6HTmaW9XPOg@ep-morning-frost-a2jog6ch-pooler.eu-central-1.aws.neon.tech/capuan_bronzes?sslmode=require'
 UPLOAD_FOLDER = 'C:/Users/franc/Projects/archaeology_project/static/uploads'
 
 # Creazione del motore e del sessionmaker
