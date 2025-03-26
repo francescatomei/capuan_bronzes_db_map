@@ -11,7 +11,7 @@ from shapely.wkb import loads as wkb_loads
 
 # Configurazione del database
 DATABASE_URL = 'postgresql+psycopg2://capuan_bronzes_owner:npg_r6HTmaW9XPOg@ep-morning-frost-a2jog6ch-pooler.eu-central-1.aws.neon.tech/capuan_bronzes'
-UPLOAD_FOLDER = 'https://capuan-bronzes-db-map.onrender.com/static/uploads/'
+UPLOAD_FOLDER = 'https://raw.githubusercontent.com/francescatomei/capuan_bronzes_db_map/main/static/uploads/'  # GitHub Raw URL
 
 # Creazione del motore e del sessionmaker
 engine = create_engine(DATABASE_URL)
@@ -95,12 +95,11 @@ def get_geodata(session):
                 "finding_spot_location": row["finding_spot_location"].hex() if row["finding_spot_location"] else None,
             }
 
-            # Gestisci le immagini
+            # Gestione delle immagini con GitHub
             image_path = row["image_path"]
             if image_path:
-                full_image_path = f"{UPLOAD_FOLDER}/{image_path}"
-                if os.path.exists(full_image_path):
-                    obj.setdefault("images", []).append(image_path)
+                full_image_path = f"{UPLOAD_FOLDER}{image_path}"  # URL completo su GitHub
+                obj.setdefault("images", []).append(full_image_path)
 
             geodata.append(obj)
 
@@ -118,7 +117,7 @@ if __name__ == "__main__":
 
         # Recupero con filtri
         filters = {"storing_place": "%Rome%"}
-        filtered_data = get_geodata(session, filters)
+        filtered_data = get_geodata(session)  # Il parametro filters non è usato nel codice originale
         print(f"Trovati {len(filtered_data)} oggetti con filtri.")
     finally:
         session.close()
