@@ -11,7 +11,7 @@ from shapely.wkb import loads as wkb_loads
 
 # Configurazione del database
 DATABASE_URL = 'postgresql+psycopg2://capuan_bronzes_owner:npg_r6HTmaW9XPOg@ep-morning-frost-a2jog6ch-pooler.eu-central-1.aws.neon.tech/capuan_bronzes'
-UPLOAD_FOLDER = 'https://raw.githubusercontent.com/francescatomei/capuan_bronzes_db_map/main/static/uploads/'
+UPLOAD_FOLDER = 'https://capuan-bronzes-db-map.onrender.com/static/uploads/'
 
 # Creazione del motore e del sessionmaker
 engine = create_engine(DATABASE_URL)
