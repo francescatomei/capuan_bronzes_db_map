@@ -92,6 +92,7 @@ def generate_map(geodata):
 
         popup_content += "</table></div>"
         return popup_content
+        print(popup_content)  # Controllo debug
 
     # Crea i marker per storing places
     for (lat, lon), objects in storing_places.items():

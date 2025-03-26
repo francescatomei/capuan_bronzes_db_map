@@ -9,11 +9,14 @@ from geoalchemy2 import Geometry
 from geoalchemy2.elements import WKTElement
 from db_utils import init_session, get_geodata
 from gis_utils import generate_map
+from flask_cors import CORS
+from flask import send_from_directory
 
 
 # Initialize the Flask app
 app = Flask(__name__)
 app.secret_key = 'una_chiave_segreta_molto_sicura'
+CORS(app)
 
 # Database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://capuan_bronzes_owner:npg_r6HTmaW9XPOg@ep-morning-frost-a2jog6ch-pooler.eu-central-1.aws.neon.tech/capuan_bronzes'
@@ -428,6 +431,16 @@ def test_db():
             return f"✅ Totale record in archaeological_objects: {count}"
         except Exception as e:
             return f"❌ Errore di connessione al database: {e}"
+
+@app.route("/list_uploads")
+def list_uploads():
+    upload_path = "static/uploads"
+    files = os.listdir(upload_path)
+    return jsonify(files)
+
+@app.route('/static/uploads/<path:filename>')
+def uploaded_file(filename):
+    return send_from_directory('static/uploads', filename)
 
 if __name__ == "__main__":
     with app.app_context():
