@@ -86,7 +86,8 @@ def generate_map(geodata):
             if obj.get('images'):
                 popup_content += "<tr><td colspan='25'><b>Images:</b><br>"
                 for image in obj['images']:
-                    popup_content += f"<img src='https://capuan-bronzes-db-map.onrender.com/static/uploads/{image}' width='200' style='margin:5px;'><br>"
+                    popup_content += f"<img src='https://capuan-bronzes-db-map.onrender.com/static/uploads/{image}' width='200' style='margin:5px;'><br>
+
                 popup_content += "</td></tr>"
 
         popup_content += "</table></div>"
