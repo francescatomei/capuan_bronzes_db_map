@@ -438,10 +438,6 @@ def list_uploads():
     files = os.listdir(upload_path)
     return jsonify(files)
 
-@app.route('/static/uploads/<path:filename>')
-def uploaded_file(filename):
-    return send_from_directory('static/uploads', filename)
-
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
