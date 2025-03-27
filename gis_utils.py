@@ -86,11 +86,12 @@ def generate_map(geodata):
             if obj.get('images'):
                 for image in obj['images']:
                 # Se l'immagine ha già "http", usa direttamente quell'URL
-                if image.startswith("http"):
-                    image_url = image
-                else:
-                    image_url = f"https://capuan-bronzes-db-map.onrender.com/static/uploads/{image}' width='200' style='margin:5px;'><br>"
-                print(f"DEBUG: URL immagine generata -> {image_url}")  # Debug per controllare
+                    if image.startswith("http"):
+                        image_url = image
+                    else:
+                        image_url = f"https://capuan-bronzes-db-map.onrender.com/static/uploads/{image}' width='200' style='margin:5px;'><br>"
+
+                    print(f"DEBUG: URL immagine generata -> {image_url}")  # Debug per controllare
                 popup_content += "</td></tr>"
 
         popup_content += "</table></div>"
