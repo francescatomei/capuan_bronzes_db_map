@@ -84,6 +84,7 @@ def generate_map(geodata):
             </tr>
             """
             if obj.get('images'):
+                print(f"Immagini per {obj['unique_id']}: {obj['images']}")  # Debug
                 popup_content += "<tr><td colspan='25'><b>Images:</b><br>"
                 for image in obj['images']:
                     popup_content += f"<img src='https://capuan-bronzes-db-map.onrender.com/static/uploads/{image}' width='200' style='margin:5px;'><br>"

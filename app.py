@@ -16,7 +16,7 @@ from flask import send_from_directory
 # Initialize the Flask app
 app = Flask(__name__)
 app.secret_key = 'una_chiave_segreta_molto_sicura'
-CORS(app)
+CORS(app, resources={r"/static/uploads/*": {"origins": "*"}})
 
 # Database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://capuan_bronzes_owner:npg_r6HTmaW9XPOg@ep-morning-frost-a2jog6ch-pooler.eu-central-1.aws.neon.tech/capuan_bronzes'
@@ -437,6 +437,10 @@ def list_uploads():
     upload_path = "static/uploads"
     files = os.listdir(upload_path)
     return jsonify(files)
+
+@app.route('/static/uploads/<path:filename>')
+def serve_image(filename):
+    return send_from_directory('static/uploads', filename)
 
 if __name__ == "__main__":
     with app.app_context():
