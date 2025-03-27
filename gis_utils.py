@@ -83,15 +83,16 @@ def generate_map(geodata):
                 <td>{obj.get('stamp', 'No' if not obj.get('stamp') else 'Yes')}</td><td>{obj.get('stamp_text', 'N/A')}</td>
             </tr>
             """
+            print(f"DEBUG: {obj['unique_id']} -> Immagini trovate: {obj.get('images', 'Nessuna')}")
             if obj.get('images'):
+                popup_content += "<tr><td colspan='25' style='text-align:center;'>"
                 for image in obj['images']:
-                # Se l'immagine ha già "http", usa direttamente quell'URL
                     if image.startswith("http"):
                         image_url = image
                     else:
-                        image_url = f"https://capuan-bronzes-db-map.onrender.com/static/uploads/{image}' width='200' style='margin:5px;'><br>"
+                        image_url = f"https://capuan-bronzes-db-map.onrender.com/static/uploads/{image}"
 
-                    print(f"DEBUG: URL immagine generata -> {image_url}")  # Debug per controllare
+                    popup_content += f"<img src='{image_url}' width='200' style='margin:5px;'><br>"
                 popup_content += "</td></tr>"
 
         popup_content += "</table></div>"
