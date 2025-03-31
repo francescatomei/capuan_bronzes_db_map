@@ -12,9 +12,34 @@ def generate_map(geodata):
     - Finding Spots: Punti basati su finding_spot_location con tabella di popup e immagini.
     Include un pannello di ricerca avanzata per query dettagliate sui campi del database.
     """
-    # Crea una mappa centrata
-    mymap = folium.Map(location=[41.8719, 12.5674], zoom_start=6)
-    mymap.get_root().html.add_child(Element('<div id="map"></div>'))  # Aggiungi un ID alla mappa
+    # Crea una mappa centrata con impostazioni robuste
+    mymap = folium.Map(
+        location=[41.8719, 12.5674],
+        zoom_start=6,
+        tiles='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        attr='OpenStreetMap',
+        control_scale=True,
+        height='100%',
+        width='100%'
+    )
+
+    # Aggiungi stili CSS per garantire la visualizzazione corretta
+    mymap.get_root().html.add_child(Element("""
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        .folium-map {
+            position: absolute !important;
+            top: 0 !important;
+            bottom: 0 !important;
+            right: 0 !important;
+            left: 0 !important;
+        }
+    </style>
+    """))
 
     # Crea i gruppi per i due livelli
     storing_layer = FeatureGroup(name="Luoghi di conservazione", control=True)
@@ -253,16 +278,22 @@ def generate_map(geodata):
     }
 
     function centerMap(latitude, longitude) {
-        // Accedi alla mappa tramite l'ID
-        const mapElement = document.getElementById('map');
-        if (mapElement && mapElement._map) {
-            mapElement._map.setView([latitude, longitude], 15); // Zoom a 15
+        // Accedi alla mappa tramite l'oggetto globale
+        if (typeof window.map !== 'undefined') {
+            window.map.setView([latitude, longitude], 15);
         } else {
-            console.error("Mappa non trovata o non accessibile.");
+            console.error("Oggetto mappa non trovato");
         }
     }
     </script>
     """
     mymap.get_root().html.add_child(Element(search_button_html))
+    
+    # Esponi l'oggetto mappa a JavaScript globale
+    mymap.get_root().html.add_child(Element("""
+    <script>
+        window.map = document.querySelector('.folium-map')._map;
+    </script>
+    """))
 
     return mymap
