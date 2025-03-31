@@ -234,11 +234,11 @@ filters = {
                 data.forEach(obj => {
                     table += `
                         <tr>
-                            <td>${{obj.unique_id}}</td>
-                            <td>${{obj.chronology || "N/A"}}</td>
-                            <td>${{obj.shape || "N/A"}}</td>
-                            <td>${{obj.storing_place || "N/A"}}</td>
-                            <td>${{obj.finding_spot || "N/A"}}</td>
+                            <td>${obj.unique_id}</td>
+                            <td>${obj.chronology ? obj.chronology : "N/A"}</td>
+                            <td>${obj.shape ? obj.shape : "N/A"}</td>
+                            <td>${obj.storing_place ? obj.storing_place : "N/A"}</td>
+                            <td>${obj.finding_spot ? obj.finding_spot : "N/A"}</td>
                             <td>
                                 <button onclick="centerMap(${obj.latitude}, ${obj.longitude})">Mostra sulla mappa</button>
                             </td>
