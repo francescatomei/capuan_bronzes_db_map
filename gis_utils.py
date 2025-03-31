@@ -185,24 +185,24 @@ def generate_map(geodata):
     <div id="search-results"></div>
 <script>
 function executeSearch() {
-    const filters = {
-        chronology: document.getElementById('search-chronology').value.trim(),
-        shape: document.getElementById('search-shape').value.trim(),
-        storing_place: document.getElementById('search-storing_place').value.trim(),
-        finding_spot: document.getElementById('search-finding_spot').value.trim(),
-        production_place: document.getElementById('search-production_place').value.trim(),
-        typology: document.getElementById('search-typology').value.trim(),
-        decoration_techniques: document.getElementById('search-decoration_techniques').value.trim(),
-        iconography: document.getElementById('search-iconography').value.trim(),
-        manufacturing_techniques: document.getElementById('search-manufacturing_techniques').value.trim(),
-        type_of_analysis: document.getElementById('search-type_of_analysis').value.trim(),
-        stamp_text: document.getElementById('search-stamp_text').value.trim(),
+filters = {
+    "chronology": document.getElementById('search-chronology').value.trim(),
+    "shape": document.getElementById('search-shape').value.trim(),
+    "storing_place": document.getElementById('search-storing_place').value.trim(),
+    "finding_spot": document.getElementById('search-finding_spot').value.trim(),
+    "production_place": document.getElementById('search-production_place').value.trim(),
+    "typology": document.getElementById('search-typology').value.trim(),
+    "decoration_techniques": document.getElementById('search-decoration_techniques').value.trim(),
+    "iconography": document.getElementById('search-iconography').value.trim(),
+    "manufacturing_techniques": document.getElementById('search-manufacturing_techniques').value.trim(),
+    "type_of_analysis": document.getElementById('search-type_of_analysis').value.trim(),
+    "stamp_text": document.getElementById('search-stamp_text').value.trim(),
 
-        // Campi Booleani
-        decoration: document.getElementById('search-decoration').checked ? "true" : "false",
-        archaeometry_analyses: document.getElementById('search-archaeometry_analyses').checked ? "true" : "false",
-        stamp: document.getElementById('search-stamp').checked ? "true" : "false"
-    };
+    # Campi Booleani
+    "decoration": "true" if document.getElementById('search-decoration').checked else "false",
+    "archaeometry_analyses": "true" if document.getElementById('search-archaeometry_analyses').checked else "false",
+    "stamp": "true" if document.getElementById('search-stamp').checked else "false"
+}
 
     fetch('/search', {
         method: 'POST',
