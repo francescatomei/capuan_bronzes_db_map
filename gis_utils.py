@@ -132,60 +132,83 @@ def generate_map(geodata):
     </div>
     <div id="search-panel" style="position: absolute; top: 60px; left: 10px; z-index: 1000; background: white; border: 1px solid #ccc; width: 300px; padding: 10px; display: none;">
         <h4>Ricerca Avanzata</h4>
-        <form id="search-form" onsubmit="return false;">
-            <input type="text" id="search-chronology" placeholder="Cronologia"><br>
-            <input type="text" id="search-shape" placeholder="Forma"><br>
-            <input type="text" id="search-storing_place" placeholder="Luogo di Conservazione"><br>
-            <input type="text" id="search-finding_spot" placeholder="Luogo di Ritrovamento"><br>
-            <input type="text" id="search-production_place" placeholder="Luogo di Produzione"><br>
-            <input type="text" id="search-typology" placeholder="Tipologia"><br>
-            <input type="text" id="search-handles" placeholder="Anse/manici"><br>
-            <input type="text" id="search-foot" placeholder="Base/piede"><br>
-            <input type="text" id="search-decoration" placeholder="Decorazione"><br>
-            <input type="text" id="search-decoration-techniques" placeholder="Tecniche Decorative"><br>
-            <input type="text" id="search-iconography" placeholder="Iconografia"><br>
-            <input type="text" id="search-manufacturing-techniques" placeholder="Tecniche Produttive"><br>
-            <input type="text" id="search-archaeometry-analyses" placeholder="Analisi Archeometriche"><br>
-            <input type="text" id="search-type-of-analysis" placeholder="Tipo di Analisi"><br>
-            <input type="text" id="search-stamp" placeholder="Bollo"><br>
-            <input type="text" id="search-stamp-text" placeholder="Testo del Bollo"><br>
-            <button onclick="executeSearch()">Cerca</button>
-        </form>
-        <div id="search-results" style="margin-top: 10px; max-height: 200px; overflow: auto;"></div>
-    </div>
-    <script>
-        const markers = {markers};
+    <form id="search-form" class="search-container">
+        <select id="search-chronology">
+            <option value="">Cronologia</option>
+            <option value="I sec. a.C.">I sec. a.C.</option>
+            <option value="I sec. d.C.">I sec. d.C.</option>
+            <option value="II sec. d.C.">II sec. d.C.</option>
+            <option value="III sec. d.C.">III sec. d.C.</option>
+        </select>
+        <select id="search-shape">
+            <option value="">Forma</option>
+            <option value="casseruola">Casseruola</option>
+            <option value="coppa a becco">Coppa a becco</option>
+            <option value="brocca">Brocca</option>
+            <option value="brocca monoansata">Brocca monoansata</option>
+            <option value="brocca a bocca trilobata">Brocca a bocca trilobata</option>
+            <option value="situla">Situla</option>
+            <option value="piede a forma di pelta">Piede a forma di pelta</option>
+            <option value="patera">Patera</option>
+            <option value="piede di situla">Piede di situla</option>
+            <option value="manico di casseruola">Manico di casseruola</option>
+            <option value="manico di patera">Manico di patera</option>
+            <option value="mestolo">Mestolo</option>
+            <option value="bacino">Bacino</option>
+            <option value="colino">Colino</option>
+            <option value="calderone">Calderone</option>
+        </select>
+        <input type="text" id="search-storing_place" placeholder="Luogo di Conservazione">
+        <input type="text" id="search-finding_spot" placeholder="Luogo di Ritrovamento">
+        <input type="text" id="search-production_place" placeholder="Luogo di Produzione">
+        <input type="text" id="search-typology" placeholder="Tipologia">
+        <input type="text" id="search-decoration_techniques" placeholder="Tecniche Decorative">
+        <input type="text" id="search-iconography" placeholder="Iconografia">
+        <input type="text" id="search-manufacturing_techniques" placeholder="Tecniche Produttive">
+        <input type="text" id="search-type_of_analysis" placeholder="Tipo di Analisi">
+        <input type="text" id="search-stamp_text" placeholder="Testo del Bollo">
 
-        function toggleSearchPanel() {{
-            const panel = document.getElementById('search-panel');
-            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-        }}
+        <!-- Campi Booleani -->
+        <label>
+            <input type="checkbox" id="search-decoration"> Decorazione
+        </label>
+        <label>
+            <input type="checkbox" id="search-archaeometry_analyses"> Analisi Archeometriche
+        </label>
+        <label>
+            <input type="checkbox" id="search-stamp"> Bollo
+        </label>
 
-        function executeSearch() {{
-            const filters = {{
-                chronology: document.getElementById('search-chronology').value.trim(),
-                shape: document.getElementById('search-shape').value.trim(),
-                storing_place: document.getElementById('search-storing_place').value.trim(),
-                finding_spot: document.getElementById('search-finding_spot').value.trim(),
-                production_place: document.getElementById('search-production_place').value.trim(),
-                typology: document.getElementById('search-typology').value.trim(),
-                handles: document.getElementById('search-handles').value.trim(),
-                foot: document.getElementById('search-foot').value.trim(),
-                decoration: document.getElementById('search-decoration').value.trim(),
-                decoration_techniques: document.getElementById('search-decoration-techniques').value.trim(),
-                iconography: document.getElementById('search-iconography').value.trim(),
-                manufacturing_techniques: document.getElementById('search-manufacturing-techniques').value.trim(),
-                archaeometry_analyses: document.getElementById('search-archaeometry-analyses').value.trim(),
-                type_of_analysis: document.getElementById('search-type-of-analysis').value.trim(),
-                stamp: document.getElementById('search-stamp').value.trim(),
-                stamp_text: document.getElementById('search-stamp-text').value.trim()
-            }};
+        <button type="button" onclick="executeSearch()">Cerca</button>
+    </form>
 
-            fetch('/search', {{
-                method: 'POST',
-                headers: {{ 'Content-Type': 'application/json' }},
-                body: JSON.stringify(filters)
-            }})
+    <div id="search-results"></div>
+<script>
+function executeSearch() {
+    const filters = {
+        chronology: document.getElementById('search-chronology').value.trim(),
+        shape: document.getElementById('search-shape').value.trim(),
+        storing_place: document.getElementById('search-storing_place').value.trim(),
+        finding_spot: document.getElementById('search-finding_spot').value.trim(),
+        production_place: document.getElementById('search-production_place').value.trim(),
+        typology: document.getElementById('search-typology').value.trim(),
+        decoration_techniques: document.getElementById('search-decoration_techniques').value.trim(),
+        iconography: document.getElementById('search-iconography').value.trim(),
+        manufacturing_techniques: document.getElementById('search-manufacturing_techniques').value.trim(),
+        type_of_analysis: document.getElementById('search-type_of_analysis').value.trim(),
+        stamp_text: document.getElementById('search-stamp_text').value.trim(),
+
+        // Campi Booleani
+        decoration: document.getElementById('search-decoration').checked ? "true" : "false",
+        archaeometry_analyses: document.getElementById('search-archaeometry_analyses').checked ? "true" : "false",
+        stamp: document.getElementById('search-stamp').checked ? "true" : "false"
+    };
+
+    fetch('/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(filters)
+    })
             .then(response => response.json())
             .then(data => {{
                 const resultsContainer = document.getElementById('search-results');
