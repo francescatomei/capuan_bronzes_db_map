@@ -210,14 +210,14 @@ filters = {
         body: JSON.stringify(filters)
     })
             .then(response => response.json())
-            .then(data => {{
+            .then(data => {
                 const resultsContainer = document.getElementById('search-results');
                 resultsContainer.innerHTML = "<h5>Risultati:</h5>";
 
-                if (data.length === 0) {{
+                if (data.length === 0) {
                     resultsContainer.innerHTML += "<p>Nessun risultato trovato</p>";
                     return;
-                }}
+                }
 
                 let table = "<table border='1' style='width:100%;'>";
                 table += `
@@ -231,7 +231,7 @@ filters = {
                     </tr>
                 `;
 
-                data.forEach(obj => {{
+                data.forEach(obj => {
                     table += `
                         <tr>
                             <td>${{obj.unique_id}}</td>
@@ -240,15 +240,15 @@ filters = {
                             <td>${{obj.storing_place || "N/A"}}</td>
                             <td>${{obj.finding_spot || "N/A"}}</td>
                             <td>
-                                <button onclick="centerMap(${{obj.latitude}}, ${{obj.longitude}})">Mostra sulla mappa</button>
+                                <button onclick="centerMap(${obj.latitude}, ${obj.longitude})">Mostra sulla mappa</button>
                             </td>
                         </tr>
                     `;
-                }});
+                });
 
                 table += "</table>";
                 resultsContainer.innerHTML += table;
-            }})
+            })
             .catch(error => console.error('Errore:', error));
         }}
 
