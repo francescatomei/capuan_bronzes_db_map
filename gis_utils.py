@@ -120,11 +120,64 @@ def generate_map(geodata):
             marker.add_to(finding_layer)
             marker_dict[obj['unique_id']] = marker
 
+    # Funzione per costruire i popup
+    def create_popup(objects, title):
+        popup_content = """
+        <div style='background-color:white; overflow:auto; max-height:500px; max-width:700px;'>
+            <button onclick="this.parentElement.requestFullscreen()" style="float:right;">Fullscreen</button>
+        """
+        popup_content += f"<b>{title}</b><br><table border='1' style='width:100%;'>"
+        popup_content += """
+        <tr>
+            <th>ID Unico</th><th>Cronologia</th><th>Forma</th><th>Luogo di Conservazione</th>
+            <th>Luogo di Ritrovamento</th><th>Numero di Inventario</th><th>Fonte Bibliografica</th>
+            <th>Dimensioni</th><th>Descrizione</th><th>Luogo di Produzione</th>
+            <th>Tipologia</th><th>Riferimenti Bibliografici</th><th>Anse/manici</th>
+            <th>Base/piede</th><th>Decorazione</th><th>Tecniche decorative</th>
+            <th>Iconografia</th><th>Tecniche produttive</th>
+            <th>Analisi Archeometriche</th><th>Tipo di Analisi</th>
+            <th>Materie Prime</th><th>Provenienza</th><th>Altre Informazioni</th>
+            <th>Bollo</th><th>Testo del Bollo</th>
+        </tr>
+        """
+        for obj in objects:
+            popup_content += f"""
+            <tr>
+                <td>{obj['unique_id']}</td><td>{obj.get('chronology', 'N/A')}</td><td>{obj.get('shape', 'N/A')}</td>
+                <td>{obj.get('storing_place', 'N/A')}</td><td>{obj.get('finding_spot', 'N/A')}</td>
+                <td>{obj.get('inventory_number', 'N/A')}</td><td>{obj.get('bibliographical_source', 'N/A')}</td>
+                <td>{obj.get('dimensions', 'N/A')}</td><td>{obj.get('description', 'N/A')}</td>
+                <td>{obj.get('production_place', 'N/A')}</td><td>{obj.get('typology', 'N/A')}</td>
+                <td>{obj.get('bibliographic_references', 'N/A')}</td><td>{obj.get('handles', 'N/A')}</td>
+                <td>{obj.get('foot', 'N/A')}</td><td>{obj.get('decoration', 'No' if not obj.get('decoration') else 'Yes')}</td>
+                <td>{obj.get('decoration_techniques', 'N/A')}</td><td>{obj.get('iconography', 'N/A')}</td>
+                <td>{obj.get('manufacturing_techniques', 'N/A')}</td><td>{obj.get('archaeometry_analyses', 'No' if not obj.get('archaeometry_analyses') else 'Yes')}</td>
+                <td>{obj.get('type_of_analysis', 'N/A')}</td><td>{obj.get('raw_materials', 'N/A')}</td>
+                <td>{obj.get('provenance', 'N/A')}</td><td>{obj.get('other_info', 'N/A')}</td>
+                <td>{obj.get('stamp', 'No' if not obj.get('stamp') else 'Yes')}</td><td>{obj.get('stamp_text', 'N/A')}</td>
+            </tr>
+            """
+            if obj.get('images'):
+                popup_content += "<tr><td colspan='25' style='text-align:center;'>"
+                for image in obj['images']:
+                    if image.startswith("http"):
+                        image_url = image
+                    else:
+                        image_url = f"https://capuan-bronzes-db-map.onrender.com/static/uploads/{image}"
+
+                    popup_content += f"<img src='{image_url}' style='max-width:200px; max-height:200px; margin:5px;'><br>"
+                popup_content += "</td></tr>"
+
+        popup_content += "</table></div>"
+        return popup_content
+
+
     # Aggiungi elementi alla mappa
     storing_layer.add_to(mymap)
     finding_layer.add_to(mymap)
     LayerControl().add_to(mymap)
     Fullscreen().add_to(mymap)
+
 
     # Bottone della barra di ricerca
     search_html = """
