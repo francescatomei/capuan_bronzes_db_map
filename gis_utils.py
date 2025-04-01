@@ -395,14 +395,29 @@ def generate_map(geodata):
     marker_dict_script = f"""
     <script>
         window.markerDict = {{
-            {', '.join([f"'{k}': document.querySelector('[data-marker-id=\"{k}\"]')._marker" for k in marker_dict.keys()})}
+            {', '.join([f"'{k}': document.querySelector('[data-marker-id=\\'{k}\\']')._marker" for k in marker_dict.keys()])}
         }};
+        
+        function highlightMarker(markerId) {{
+            if (currentHighlightedMarker) {{
+                const prevIcon = currentHighlightedMarker._icon;
+                if (prevIcon) {{
+                    prevIcon.classList.remove('highlighted-marker');
+                }}
+            }}
+            
+            const marker = window.markerDict[markerId];
+            if (marker && marker._icon) {{
+                marker._icon.classList.add('highlighted-marker');
+                currentHighlightedMarker = marker;
+                marker.openPopup();
+            }}
+        }}
     </script>
     """
     
     # Assegna un attributo data-marker-id a ciascun marker
     for marker_id, marker in marker_dict.items():
-        marker.get_name = lambda: f"marker-{marker_id}"
         marker.options['data-marker-id'] = marker_id
     
     mymap.get_root().html.add_child(Element(search_button_html))
