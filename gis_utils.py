@@ -90,6 +90,11 @@ def generate_map(geodata):
         .search-results th {
             background-color: #f2f2f2;
         }
+        .highlighted-marker {
+            filter: hue-rotate(120deg) brightness(1.2) drop-shadow(0 0 5px yellow);
+            transform: scale(1.3);
+            transition: all 0.3s ease;
+        }
     </style>
     """))
 
@@ -101,6 +106,7 @@ def generate_map(geodata):
     storing_places = defaultdict(list)
     finding_spots = defaultdict(list)
     markers = []
+    marker_dict = {}  # Dizionario per memorizzare i marker
 
     for obj in geodata:
         # Decodifica le geometrie
@@ -172,23 +178,29 @@ def generate_map(geodata):
         popup_content += "</table></div>"
         return popup_content
 
-    # Crea i marker per storing places
+    # Crea i marker per storing places e li memorizza nel dizionario
     for (lat, lon), objects in storing_places.items():
-        Marker(
+        marker = Marker(
             location=[lat, lon],
             popup=Popup(create_popup(objects, "Storing Place Objects"), max_width=700),
             tooltip="Storing Place",
             icon=folium.Icon(color="blue")
-        ).add_to(storing_layer)
+        )
+        marker.add_to(storing_layer)
+        for obj in objects:
+            marker_dict[obj['unique_id']] = marker
 
-    # Crea i marker per finding spots
+    # Crea i marker per finding spots e li memorizza nel dizionario
     for (lat, lon), objects in finding_spots.items():
-        Marker(
+        marker = Marker(
             location=[lat, lon],
             popup=Popup(create_popup(objects, "Finding Spot Objects"), max_width=700),
             tooltip="Finding Spot",
             icon=folium.Icon(color="red")
-        ).add_to(finding_layer)
+        )
+        marker.add_to(finding_layer)
+        for obj in objects:
+            marker_dict[obj['unique_id']] = marker
 
     # Aggiungi i layer alla mappa
     storing_layer.add_to(mymap)
@@ -198,7 +210,7 @@ def generate_map(geodata):
     LayerControl().add_to(mymap)
     Fullscreen().add_to(mymap)
 
-    # Bottone della barra di ricerca con TUTTI i parametri originali
+    # Bottone della barra di ricerca
     search_button_html = """
     <div class="search-container">
         <button onclick="toggleSearchPanel()" class="search-button">Ricerca Avanzata</button>
@@ -264,6 +276,7 @@ def generate_map(geodata):
     <script>
     // Variabile globale per la mappa
     var foliumMap;
+    var currentHighlightedMarker = null;
     
     // Attendi che la mappa sia completamente caricata
     function initializeMap() {
@@ -338,7 +351,7 @@ def generate_map(geodata):
                         <td>${obj.storing_place ? obj.storing_place : "N/A"}</td>
                         <td>${obj.finding_spot ? obj.finding_spot : "N/A"}</td>
                         <td>
-                            <button onclick="centerMap(${obj.latitude}, ${obj.longitude})" style="padding: 5px 10px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer;">Mostra sulla mappa</button>
+                            <button onclick="highlightMarker('${obj.unique_id}')" style="padding: 5px 10px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer;">Mostra sulla mappa</button>
                         </td>
                     </tr>
                 `;
@@ -350,18 +363,49 @@ def generate_map(geodata):
         .catch(error => console.error('Errore:', error));
     }
 
-    function centerMap(latitude, longitude) {
-        if (foliumMap) {
-            foliumMap.setView([latitude, longitude], 15);
+    function highlightMarker(markerId) {
+        // Rimuovi l'evidenziazione precedente
+        if (currentHighlightedMarker) {
+            const prevIcon = currentHighlightedMarker._icon;
+            if (prevIcon) {
+                prevIcon.classList.remove('highlighted-marker');
+            }
+        }
+        
+        // Trova il marker nel dizionario globale
+        const marker = window.markerDict[markerId];
+        if (marker && marker._icon) {
+            // Applica la classe di evidenziazione
+            marker._icon.classList.add('highlighted-marker');
+            currentHighlightedMarker = marker;
+            
+            // Apri il popup
+            marker.openPopup();
         } else {
-            console.log("Mappa non ancora inizializzata, riprovo...");
-            setTimeout(function() {
-                centerMap(latitude, longitude);
-            }, 100);
+            console.error("Marker non trovato:", markerId);
         }
     }
+    
+    // Esponi il dizionario dei marker a JavaScript globale
+    window.markerDict = {};
     </script>
     """
+    
+    # Aggiungi il dizionario dei marker al template
+    marker_dict_script = f"""
+    <script>
+        window.markerDict = {{
+            {', '.join([f"'{k}': document.querySelector('[data-marker-id=\"{k}\"]')._marker" for k in marker_dict.keys()})}
+        }};
+    </script>
+    """
+    
+    # Assegna un attributo data-marker-id a ciascun marker
+    for marker_id, marker in marker_dict.items():
+        marker.get_name = lambda: f"marker-{marker_id}"
+        marker.options['data-marker-id'] = marker_id
+    
     mymap.get_root().html.add_child(Element(search_button_html))
+    mymap.get_root().html.add_child(Element(marker_dict_script))
     
     return mymap
