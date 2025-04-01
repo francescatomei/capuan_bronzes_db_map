@@ -49,8 +49,46 @@ def generate_map(geodata):
         #search-panel {
             z-index: 1000;
             background: white;
-            padding: 10px;
+            padding: 15px;
+            border-radius: 5px;
             box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            width: 300px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .search-control {
+            margin-bottom: 10px;
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .search-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+        .search-button:hover {
+            background: #0056b3;
+        }
+        .search-results {
+            margin-top: 15px;
+        }
+        .search-results table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .search-results th, .search-results td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .search-results th {
+            background-color: #f2f2f2;
         }
     </style>
     """))
@@ -120,7 +158,6 @@ def generate_map(geodata):
                 <td>{obj.get('stamp', 'No' if not obj.get('stamp') else 'Yes')}</td><td>{obj.get('stamp_text', 'N/A')}</td>
             </tr>
             """
-            print(f"DEBUG: {obj['unique_id']} -> Immagini trovate: {obj.get('images', 'Nessuna')}")
             if obj.get('images'):
                 popup_content += "<tr><td colspan='25' style='text-align:center;'>"
                 for image in obj['images']:
@@ -161,33 +198,85 @@ def generate_map(geodata):
     LayerControl().add_to(mymap)
     Fullscreen().add_to(mymap)
 
-    # Bottone della barra di ricerca
+    # Bottone della barra di ricerca con TUTTI i parametri originali
     search_button_html = """
     <div class="search-container">
-        <button onclick="toggleSearchPanel()" style="padding: 10px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">Ricerca Avanzata</button>
-        <div id="search-panel" style="display: none; margin-top: 10px; width: 300px;">
+        <button onclick="toggleSearchPanel()" class="search-button">Ricerca Avanzata</button>
+        <div id="search-panel" style="display: none;">
             <h4>Ricerca Avanzata</h4>
             <form id="search-form">
-                <select id="search-chronology" class="form-control mb-2">
+                <select id="search-chronology" class="search-control">
                     <option value="">Cronologia</option>
                     <option value="I sec. a.C.">I sec. a.C.</option>
                     <option value="I sec. d.C.">I sec. d.C.</option>
                     <option value="II sec. d.C.">II sec. d.C.</option>
                     <option value="III sec. d.C.">III sec. d.C.</option>
                 </select>
-                <!-- Altri campi di ricerca... -->
-                <button type="button" class="btn btn-primary mt-2" onclick="executeSearch()">Cerca</button>
+                
+                <select id="search-shape" class="search-control">
+                    <option value="">Forma</option>
+                    <option value="casseruola">Casseruola</option>
+                    <option value="coppa a becco">Coppa a becco</option>
+                    <option value="brocca">Brocca</option>
+                    <option value="brocca monoansata">Brocca monoansata</option>
+                    <option value="brocca a bocca trilobata">Brocca a bocca trilobata</option>
+                    <option value="situla">Situla</option>
+                    <option value="piede a forma di pelta">Piede a forma di pelta</option>
+                    <option value="patera">Patera</option>
+                    <option value="piede di situla">Piede di situla</option>
+                    <option value="manico di casseruola">Manico di casseruola</option>
+                    <option value="manico di patera">Manico di patera</option>
+                    <option value="mestolo">Mestolo</option>
+                    <option value="bacino">Bacino</option>
+                    <option value="colino">Colino</option>
+                    <option value="calderone">Calderone</option>
+                </select>
+                
+                <input type="text" id="search-storing_place" class="search-control" placeholder="Luogo di Conservazione">
+                <input type="text" id="search-finding_spot" class="search-control" placeholder="Luogo di Ritrovamento">
+                <input type="text" id="search-production_place" class="search-control" placeholder="Luogo di Produzione">
+                <input type="text" id="search-typology" class="search-control" placeholder="Tipologia">
+                <input type="text" id="search-decoration_techniques" class="search-control" placeholder="Tecniche Decorative">
+                <input type="text" id="search-iconography" class="search-control" placeholder="Iconografia">
+                <input type="text" id="search-manufacturing_techniques" class="search-control" placeholder="Tecniche Produttive">
+                <input type="text" id="search-type_of_analysis" class="search-control" placeholder="Tipo di Analisi">
+                <input type="text" id="search-stamp_text" class="search-control" placeholder="Testo del Bollo">
+
+                <div style="margin: 10px 0;">
+                    <label style="display: block; margin: 5px 0;">
+                        <input type="checkbox" id="search-decoration"> Decorazione
+                    </label>
+                    <label style="display: block; margin: 5px 0;">
+                        <input type="checkbox" id="search-archaeometry_analyses"> Analisi Archeometriche
+                    </label>
+                    <label style="display: block; margin: 5px 0;">
+                        <input type="checkbox" id="search-stamp"> Bollo
+                    </label>
+                </div>
+
+                <button type="button" class="search-button" onclick="executeSearch()">Cerca</button>
             </form>
-            <div id="search-results" class="mt-3"></div>
+
+            <div id="search-results" class="search-results"></div>
         </div>
     </div>
+
     <script>
     // Variabile globale per la mappa
     var foliumMap;
     
     // Attendi che la mappa sia completamente caricata
+    function initializeMap() {
+        var mapElement = document.querySelector('.folium-map');
+        if (mapElement && mapElement._map) {
+            foliumMap = mapElement._map;
+        } else {
+            setTimeout(initializeMap, 100);
+        }
+    }
+    
     document.addEventListener('DOMContentLoaded', function() {
-        foliumMap = document.querySelector('.folium-map')._map;
+        initializeMap();
     });
 
     function toggleSearchPanel() {
@@ -197,7 +286,20 @@ def generate_map(geodata):
 
     function executeSearch() {
         const filters = {
-            // Campi di ricerca...
+            "chronology": document.getElementById('search-chronology').value.trim(),
+            "shape": document.getElementById('search-shape').value.trim(),
+            "storing_place": document.getElementById('search-storing_place').value.trim(),
+            "finding_spot": document.getElementById('search-finding_spot').value.trim(),
+            "production_place": document.getElementById('search-production_place').value.trim(),
+            "typology": document.getElementById('search-typology').value.trim(),
+            "decoration_techniques": document.getElementById('search-decoration_techniques').value.trim(),
+            "iconography": document.getElementById('search-iconography').value.trim(),
+            "manufacturing_techniques": document.getElementById('search-manufacturing_techniques').value.trim(),
+            "type_of_analysis": document.getElementById('search-type_of_analysis').value.trim(),
+            "stamp_text": document.getElementById('search-stamp_text').value.trim(),
+            "decoration": document.getElementById('search-decoration').checked ? "true" : "false",
+            "archaeometry_analyses": document.getElementById('search-archaeometry_analyses').checked ? "true" : "false",
+            "stamp": document.getElementById('search-stamp').checked ? "true" : "false"
         };
 
         fetch('/search', {
@@ -207,7 +309,43 @@ def generate_map(geodata):
         })
         .then(response => response.json())
         .then(data => {
-            // Gestione risultati...
+            const resultsContainer = document.getElementById('search-results');
+            resultsContainer.innerHTML = "<h5>Risultati:</h5>";
+
+            if (data.length === 0) {
+                resultsContainer.innerHTML += "<p>Nessun risultato trovato</p>";
+                return;
+            }
+
+            let table = "<table border='1' style='width:100%;'>";
+            table += `
+                <tr>
+                    <th>ID Unico</th>
+                    <th>Cronologia</th>
+                    <th>Forma</th>
+                    <th>Luogo di Conservazione</th>
+                    <th>Luogo di Ritrovamento</th>
+                    <th>Azioni</th>
+                </tr>
+            `;
+
+            data.forEach(obj => {
+                table += `
+                    <tr>
+                        <td>${obj.unique_id}</td>
+                        <td>${obj.chronology ? obj.chronology : "N/A"}</td>
+                        <td>${obj.shape ? obj.shape : "N/A"}</td>
+                        <td>${obj.storing_place ? obj.storing_place : "N/A"}</td>
+                        <td>${obj.finding_spot ? obj.finding_spot : "N/A"}</td>
+                        <td>
+                            <button onclick="centerMap(${obj.latitude}, ${obj.longitude})" style="padding: 5px 10px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer;">Mostra sulla mappa</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            table += "</table>";
+            resultsContainer.innerHTML += table;
         })
         .catch(error => console.error('Errore:', error));
     }
@@ -216,7 +354,7 @@ def generate_map(geodata):
         if (foliumMap) {
             foliumMap.setView([latitude, longitude], 15);
         } else {
-            console.error("Mappa non ancora inizializzata");
+            console.log("Mappa non ancora inizializzata, riprovo...");
             setTimeout(function() {
                 centerMap(latitude, longitude);
             }, 100);
