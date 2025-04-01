@@ -7,13 +7,12 @@ from folium import Element
 
 def generate_map(geodata):
     """
-    Genera una mappa Folium completa con:
-    - Popup completi e funzionanti
-    - Evidenziazione marker corretta
-    - Ricerca avanzata con tutti i parametri
-    - Fix per l'errore '_marker' null
+    Genera una mappa Folium con due livelli organizzati:
+    - Storing Places: Punti basati su storing_place_location con tabella di popup e immagini.
+    - Finding Spots: Punti basati su finding_spot_location con tabella di popup e immagini.
+    Include un pannello di ricerca avanzata per query dettagliate sui campi del database.
     """
-    # Configurazione mappa base
+    # Crea una mappa centrata con impostazioni robuste
     mymap = folium.Map(
         location=[41.8719, 12.5674],
         zoom_start=6,
@@ -24,7 +23,7 @@ def generate_map(geodata):
         width='100%'
     )
 
-    # Aggiungi stili CSS
+    # Aggiungi stili CSS per garantire la visualizzazione corretta
     mymap.get_root().html.add_child(Element("""
     <style>
         html, body {
@@ -34,11 +33,11 @@ def generate_map(geodata):
             overflow: hidden;
         }
         .folium-map {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            right: 0;
-            left: 0;
+            position: absolute !important;
+            top: 0 !important;
+            bottom: 0 !important;
+            right: 0 !important;
+            left: 0 !important;
             z-index: 1;
         }
         .search-container {
@@ -48,6 +47,7 @@ def generate_map(geodata):
             z-index: 1000;
         }
         #search-panel {
+            z-index: 1000;
             background: white;
             padding: 15px;
             border-radius: 5px;
@@ -55,7 +55,6 @@ def generate_map(geodata):
             width: 300px;
             max-height: 80vh;
             overflow-y: auto;
-            display: none;
         }
         .search-control {
             margin-bottom: 10px;
@@ -73,85 +72,137 @@ def generate_map(geodata):
             cursor: pointer;
             width: 100%;
         }
-        .highlighted-marker {
-            filter: hue-rotate(120deg) brightness(1.2);
-            transform: scale(1.3);
-            transition: all 0.3s ease;
-            z-index: 1000 !important;
+        .search-button:hover {
+            background: #0056b3;
         }
-        .popup-content {
-            max-width: 700px;
-            max-height: 500px;
-            overflow: auto;
-            padding: 10px;
+        .search-results {
+            margin-top: 15px;
         }
-        .popup-image {
-            max-width: 200px;
-            max-height: 200px;
-            margin: 5px;
-            display: block;
-        }
-        .popup-table {
+        .search-results table {
             width: 100%;
             border-collapse: collapse;
         }
-        .popup-table th, .popup-table td {
+        .search-results th, .search-results td {
             border: 1px solid #ddd;
             padding: 8px;
             text-align: left;
         }
-        .popup-table th {
+        .search-results th {
             background-color: #f2f2f2;
         }
     </style>
     """))
 
-    # Inizializza layer e dizionario marker
-    storing_layer = FeatureGroup(name="Luoghi di conservazione", show=True)
-    finding_layer = FeatureGroup(name="Luoghi di rinvenimento", show=True)
-    marker_dict = {}
+    # Crea i gruppi per i due livelli
+    storing_layer = FeatureGroup(name="Luoghi di conservazione", control=True)
+    finding_layer = FeatureGroup(name="Luoghi di rinvenimento", control=True)
 
-    # Processa i dati geografici
+    # Organizza i dati per posizione
+    storing_places = defaultdict(list)
+    finding_spots = defaultdict(list)
+    markers = []
+
     for obj in geodata:
-        # Estrai geometrie
-        storing_point = wkb_loads(obj['storing_place_location'], hex=True) if obj.get('storing_place_location') else None
-        finding_point = wkb_loads(obj['finding_spot_location'], hex=True) if obj.get('finding_spot_location') else None
+        # Decodifica le geometrie
+        storing_point = None
+        finding_point = None
 
-        # Crea marker per storing place
-        if storing_point and storing_point.x != 0 and storing_point.y != 0:
-            popup = Popup(create_popup_content(obj, "Luogo di conservazione"), max_width=700)
-            marker = Marker(
-                location=[storing_point.y, storing_point.x],
-                popup=popup,
-                icon=folium.Icon(color='blue'),
-                tooltip=f"ID: {obj['unique_id']}"
-            )
-            marker.add_to(storing_layer)
-            marker_dict[obj['unique_id']] = marker._id  # Memorizza l'ID Leaflet
+        if 'storing_place_location' in obj and obj['storing_place_location']:
+            storing_point = wkb_loads(obj['storing_place_location'], hex=True)
+        if 'finding_spot_location' in obj and obj['finding_spot_location']:
+            finding_point = wkb_loads(obj['finding_spot_location'], hex=True)
 
-        # Crea marker per finding spot
-        if finding_point and finding_point.x != 0 and finding_point.y != 0:
-            popup = Popup(create_popup_content(obj, "Luogo di ritrovamento"), max_width=700)
-            marker = Marker(
-                location=[finding_point.y, finding_point.x],
-                popup=popup,
-                icon=folium.Icon(color='red'),
-                tooltip=f"ID: {obj['unique_id']}"
-            )
-            marker.add_to(finding_layer)
-            marker_dict[obj['unique_id']] = marker._id  # Memorizza l'ID Leaflet
+        # Ignora punti con coordinate nulle o zero
+        if storing_point and (storing_point.x != 0 and storing_point.y != 0):
+            storing_places[(storing_point.y, storing_point.x)].append(obj)
+            markers.append({"unique_id": obj['unique_id'], "latitude": storing_point.y, "longitude": storing_point.x})
 
-    # Aggiungi elementi alla mappa
+        if finding_point and (finding_point.x != 0 and finding_point.y != 0):
+            finding_spots[(finding_point.y, finding_point.x)].append(obj)
+            markers.append({"unique_id": obj['unique_id'], "latitude": finding_point.y, "longitude": finding_point.x})
+
+    # Funzione per costruire i popup
+    def create_popup(objects, title):
+        popup_content = """
+        <div style='background-color:white; overflow:auto; max-height:500px; max-width:700px;'>
+            <button onclick="this.parentElement.requestFullscreen()" style="float:right;">Fullscreen</button>
+        """
+        popup_content += f"<b>{title}</b><br><table border='1' style='width:100%;'>"
+        popup_content += """
+        <tr>
+            <th>ID Unico</th><th>Cronologia</th><th>Forma</th><th>Luogo di Conservazione</th>
+            <th>Luogo di Ritrovamento</th><th>Numero di Inventario</th><th>Fonte Bibliografica</th>
+            <th>Dimensioni</th><th>Descrizione</th><th>Luogo di Produzione</th>
+            <th>Tipologia</th><th>Riferimenti Bibliografici</th><th>Anse/manici</th>
+            <th>Base/piede</th><th>Decorazione</th><th>Tecniche decorative</th>
+            <th>Iconografia</th><th>Tecniche produttive</th>
+            <th>Analisi Archeometriche</th><th>Tipo di Analisi</th>
+            <th>Materie Prime</th><th>Provenienza</th><th>Altre Informazioni</th>
+            <th>Bollo</th><th>Testo del Bollo</th>
+        </tr>
+        """
+        for obj in objects:
+            popup_content += f"""
+            <tr>
+                <td>{obj['unique_id']}</td><td>{obj.get('chronology', 'N/A')}</td><td>{obj.get('shape', 'N/A')}</td>
+                <td>{obj.get('storing_place', 'N/A')}</td><td>{obj.get('finding_spot', 'N/A')}</td>
+                <td>{obj.get('inventory_number', 'N/A')}</td><td>{obj.get('bibliographical_source', 'N/A')}</td>
+                <td>{obj.get('dimensions', 'N/A')}</td><td>{obj.get('description', 'N/A')}</td>
+                <td>{obj.get('production_place', 'N/A')}</td><td>{obj.get('typology', 'N/A')}</td>
+                <td>{obj.get('bibliographic_references', 'N/A')}</td><td>{obj.get('handles', 'N/A')}</td>
+                <td>{obj.get('foot', 'N/A')}</td><td>{obj.get('decoration', 'No' if not obj.get('decoration') else 'Yes')}</td>
+                <td>{obj.get('decoration_techniques', 'N/A')}</td><td>{obj.get('iconography', 'N/A')}</td>
+                <td>{obj.get('manufacturing_techniques', 'N/A')}</td><td>{obj.get('archaeometry_analyses', 'No' if not obj.get('archaeometry_analyses') else 'Yes')}</td>
+                <td>{obj.get('type_of_analysis', 'N/A')}</td><td>{obj.get('raw_materials', 'N/A')}</td>
+                <td>{obj.get('provenance', 'N/A')}</td><td>{obj.get('other_info', 'N/A')}</td>
+                <td>{obj.get('stamp', 'No' if not obj.get('stamp') else 'Yes')}</td><td>{obj.get('stamp_text', 'N/A')}</td>
+            </tr>
+            """
+            if obj.get('images'):
+                popup_content += "<tr><td colspan='25' style='text-align:center;'>"
+                for image in obj['images']:
+                    if image.startswith("http"):
+                        image_url = image
+                    else:
+                        image_url = f"https://capuan-bronzes-db-map.onrender.com/static/uploads/{image}"
+
+                    popup_content += f"<img src='{image_url}' style='max-width:200px; max-height:200px; margin:5px;'><br>"
+                popup_content += "</td></tr>"
+
+        popup_content += "</table></div>"
+        return popup_content
+
+    # Crea i marker per storing places
+    for (lat, lon), objects in storing_places.items():
+        Marker(
+            location=[lat, lon],
+            popup=Popup(create_popup(objects, "Storing Place Objects"), max_width=700),
+            tooltip="Storing Place",
+            icon=folium.Icon(color="blue")
+        ).add_to(storing_layer)
+
+    # Crea i marker per finding spots
+    for (lat, lon), objects in finding_spots.items():
+        Marker(
+            location=[lat, lon],
+            popup=Popup(create_popup(objects, "Finding Spot Objects"), max_width=700),
+            tooltip="Finding Spot",
+            icon=folium.Icon(color="red")
+        ).add_to(finding_layer)
+
+    # Aggiungi i layer alla mappa
     storing_layer.add_to(mymap)
     finding_layer.add_to(mymap)
+
+    # Aggiungi il controllo di layer e fullscreen
     LayerControl().add_to(mymap)
     Fullscreen().add_to(mymap)
 
-    # Bottone della barra di ricerca
-    search_html = """
+    # Bottone della barra di ricerca con TUTTI i parametri originali
+    search_button_html = """
     <div class="search-container">
         <button onclick="toggleSearchPanel()" class="search-button">Ricerca Avanzata</button>
-        <div id="search-panel">
+        <div id="search-panel" style="display: none;">
             <h4>Ricerca Avanzata</h4>
             <form id="search-form">
                 <select id="search-chronology" class="search-control">
@@ -191,167 +242,126 @@ def generate_map(geodata):
                 <input type="text" id="search-type_of_analysis" class="search-control" placeholder="Tipo di Analisi">
                 <input type="text" id="search-stamp_text" class="search-control" placeholder="Testo del Bollo">
 
-                <div style="margin:10px 0;">
-                    <label><input type="checkbox" id="search-decoration"> Decorazione</label><br>
-                    <label><input type="checkbox" id="search-archaeometry"> Analisi archeometriche</label><br>
-                    <label><input type="checkbox" id="search-stamp"> Bollo</label>
+                <div style="margin: 10px 0;">
+                    <label style="display: block; margin: 5px 0;">
+                        <input type="checkbox" id="search-decoration"> Decorazione
+                    </label>
+                    <label style="display: block; margin: 5px 0;">
+                        <input type="checkbox" id="search-archaeometry_analyses"> Analisi Archeometriche
+                    </label>
+                    <label style="display: block; margin: 5px 0;">
+                        <input type="checkbox" id="search-stamp"> Bollo
+                    </label>
                 </div>
-                
+
                 <button type="button" class="search-button" onclick="executeSearch()">Cerca</button>
             </form>
-            
-            <div id="search-results" style="margin-top:15px;"></div>
+
+            <div id="search-results" class="search-results"></div>
         </div>
     </div>
-    """
 
-    # Script per la gestione dei marker
-    marker_script = f"""
     <script>
-    // Dizionario globale per gli ID dei marker
-    window.markerIds = {{
-        {', '.join([f"'{k}': '{v}'" for k, v in marker_dict.items()])}
-    }};
+    // Variabile globale per la mappa
+    var foliumMap;
     
-    let currentHighlighted = null;
+    // Attendi che la mappa sia completamente caricata
+    function initializeMap() {
+        var mapElement = document.querySelector('.folium-map');
+        if (mapElement && mapElement._map) {
+            foliumMap = mapElement._map;
+        } else {
+            setTimeout(initializeMap, 100);
+        }
+    }
     
-    function toggleSearchPanel() {{
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeMap();
+    });
+
+    function toggleSearchPanel() {
         const panel = document.getElementById('search-panel');
         panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-    }}
-    
-    function getMarkerById(id) {{
-        // Trova il marker usando l'ID Leaflet
-        const leafletId = window.markerIds[id];
-        if (!leafletId) return null;
-        
-        // Cerca il marker in tutti i layer della mappa
-        const map = document.querySelector('.folium-map')._map;
-        for (const layerId in map._layers) {{
-            const layer = map._layers[layerId];
-            if (layer._leaflet_id === leafletId) {{
-                return layer;
-            }}
-        }}
-        return null;
-    }}
-    
-    function highlightMarker(markerId) {{
-        // Rimuovi evidenziazione precedente
-        if (currentHighlighted && currentHighlighted._icon) {{
-            currentHighlighted._icon.classList.remove('highlighted-marker');
-        }}
-        
-        // Trova e evidenzia il nuovo marker
-        const marker = getMarkerById(markerId);
-        if (marker && marker._icon) {{
-            marker._icon.classList.add('highlighted-marker');
-            marker.openPopup();
-            currentHighlighted = marker;
-            
-            // Centra la mappa sul marker
-            const map = marker._map;
-            map.setView(marker.getLatLng(), map.getZoom());
-        }}
-    }}
-    
-    function executeSearch() {{
-        const filters = {{
-            chronology: document.getElementById('search-chronology').value,
-            shape: document.getElementById('search-shape').value,
-            storing_place: document.getElementById('search-storing_place').value,
-            finding_spot: document.getElementById('search-finding_spot').value,
-            production_place: document.getElementById('search-production_place').value,
-            typology: document.getElementById('search-typology').value,
-            decoration_techniques: document.getElementById('search-decoration_techniques').value,
-            iconography: document.getElementById('search-iconography').value,
-            manufacturing_techniques: document.getElementById('search-manufacturing_techniques').value,
-            type_of_analysis: document.getElementById('search-type_of_analysis').value,
-            stamp_text: document.getElementById('search-stamp_text').value,
-            decoration: document.getElementById('search-decoration').checked,
-            archaeometry: document.getElementById('search-archaeometry').checked,
-            stamp: document.getElementById('search-stamp').checked
-        }};
-        
-        fetch('/search', {{
+    }
+
+    function executeSearch() {
+        const filters = {
+            "chronology": document.getElementById('search-chronology').value.trim(),
+            "shape": document.getElementById('search-shape').value.trim(),
+            "storing_place": document.getElementById('search-storing_place').value.trim(),
+            "finding_spot": document.getElementById('search-finding_spot').value.trim(),
+            "production_place": document.getElementById('search-production_place').value.trim(),
+            "typology": document.getElementById('search-typology').value.trim(),
+            "decoration_techniques": document.getElementById('search-decoration_techniques').value.trim(),
+            "iconography": document.getElementById('search-iconography').value.trim(),
+            "manufacturing_techniques": document.getElementById('search-manufacturing_techniques').value.trim(),
+            "type_of_analysis": document.getElementById('search-type_of_analysis').value.trim(),
+            "stamp_text": document.getElementById('search-stamp_text').value.trim(),
+            "decoration": document.getElementById('search-decoration').checked ? "true" : "false",
+            "archaeometry_analyses": document.getElementById('search-archaeometry_analyses').checked ? "true" : "false",
+            "stamp": document.getElementById('search-stamp').checked ? "true" : "false"
+        };
+
+        fetch('/search', {
             method: 'POST',
-            headers: {{'Content-Type': 'application/json'}},
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(filters)
-        }})
+        })
         .then(response => response.json())
-        .then(data => showResults(data))
-        .catch(error => console.error('Error:', error));
-    }}
-    
-    function showResults(data) {{
-        const container = document.getElementById('search-results');
-        if (!data || data.length === 0) {{
-            container.innerHTML = '<p>Nessun risultato trovato</p>';
-            return;
-        }}
-        
-        let html = '<table style="width:100%"><tr><th>ID</th><th>Cronologia</th><th>Forma</th><th>Azioni</th></tr>';
-        data.forEach(item => {{
-            html += `<tr>
-                <td>${{item.unique_id}}</td>
-                <td>${{item.chronology || 'N/A'}}</td>
-                <td>${{item.shape || 'N/A'}}</td>
-                <td><button onclick="highlightMarker('${{item.unique_id}}')" style="padding:5px 10px;background:#007bff;color:white;border:none;border-radius:3px;cursor:pointer;">Mostra</button></td>
-            </tr>`;
-        }});
-        html += '</table>';
-        container.innerHTML = html;
-    }}
+        .then(data => {
+            const resultsContainer = document.getElementById('search-results');
+            resultsContainer.innerHTML = "<h5>Risultati:</h5>";
+
+            if (data.length === 0) {
+                resultsContainer.innerHTML += "<p>Nessun risultato trovato</p>";
+                return;
+            }
+
+            let table = "<table border='1' style='width:100%;'>";
+            table += `
+                <tr>
+                    <th>ID Unico</th>
+                    <th>Cronologia</th>
+                    <th>Forma</th>
+                    <th>Luogo di Conservazione</th>
+                    <th>Luogo di Ritrovamento</th>
+                    <th>Azioni</th>
+                </tr>
+            `;
+
+            data.forEach(obj => {
+                table += `
+                    <tr>
+                        <td>${obj.unique_id}</td>
+                        <td>${obj.chronology ? obj.chronology : "N/A"}</td>
+                        <td>${obj.shape ? obj.shape : "N/A"}</td>
+                        <td>${obj.storing_place ? obj.storing_place : "N/A"}</td>
+                        <td>${obj.finding_spot ? obj.finding_spot : "N/A"}</td>
+                        <td>
+                            <button onclick="centerMap(${obj.latitude}, ${obj.longitude})" style="padding: 5px 10px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer;">Mostra sulla mappa</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            table += "</table>";
+            resultsContainer.innerHTML += table;
+        })
+        .catch(error => console.error('Errore:', error));
+    }
+
+    function centerMap(latitude, longitude) {
+        if (foliumMap) {
+            foliumMap.setView([latitude, longitude], 15);
+        } else {
+            console.log("Mappa non ancora inizializzata, riprovo...");
+            setTimeout(function() {
+                centerMap(latitude, longitude);
+            }, 100);
+        }
+    }
     </script>
     """
-
-    mymap.get_root().html.add_child(Element(search_html))
-    mymap.get_root().html.add_child(Element(marker_script))
+    mymap.get_root().html.add_child(Element(search_button_html))
     
     return mymap
-
-def create_popup_content(obj, title):
-    """Crea contenuto popup completo con tutti i campi"""
-    html = f"""
-    <div class="popup-content">
-        <button onclick="this.parentElement.requestFullscreen()" style="float:right;background:#007bff;color:white;border:none;padding:5px 10px;border-radius:3px;cursor:pointer;">Fullscreen</button>
-        <h4>{title}</h4>
-        <table class="popup-table">
-            <tr><th>ID Unico:</th><td>{obj.get('unique_id', 'N/A')}</td></tr>
-            <tr><th>Cronologia:</th><td>{obj.get('chronology', 'N/A')}</td></tr>
-            <tr><th>Forma:</th><td>{obj.get('shape', 'N/A')}</td></tr>
-            <tr><th>Luogo Conservazione:</th><td>{obj.get('storing_place', 'N/A')}</td></tr>
-            <tr><th>Luogo Ritrovamento:</th><td>{obj.get('finding_spot', 'N/A')}</td></tr>
-            <tr><th>Numero Inventario:</th><td>{obj.get('inventory_number', 'N/A')}</td></tr>
-            <tr><th>Fonte Bibliografica:</th><td>{obj.get('bibliographical_source', 'N/A')}</td></tr>
-            <tr><th>Dimensioni:</th><td>{obj.get('dimensions', 'N/A')}</td></tr>
-            <tr><th>Descrizione:</th><td>{obj.get('description', 'N/A')}</td></tr>
-            <tr><th>Luogo Produzione:</th><td>{obj.get('production_place', 'N/A')}</td></tr>
-            <tr><th>Tipologia:</th><td>{obj.get('typology', 'N/A')}</td></tr>
-            <tr><th>Riferimenti Bibliografici:</th><td>{obj.get('bibliographic_references', 'N/A')}</td></tr>
-            <tr><th>Anse/manici:</th><td>{obj.get('handles', 'N/A')}</td></tr>
-            <tr><th>Base/piede:</th><td>{obj.get('foot', 'N/A')}</td></tr>
-            <tr><th>Decorazione:</th><td>{'Sì' if obj.get('decoration') else 'No'}</td></tr>
-            <tr><th>Tecniche decorative:</th><td>{obj.get('decoration_techniques', 'N/A')}</td></tr>
-            <tr><th>Iconografia:</th><td>{obj.get('iconography', 'N/A')}</td></tr>
-            <tr><th>Tecniche produttive:</th><td>{obj.get('manufacturing_techniques', 'N/A')}</td></tr>
-            <tr><th>Analisi Archeometriche:</th><td>{'Sì' if obj.get('archaeometry_analyses') else 'No'}</td></tr>
-            <tr><th>Tipo di Analisi:</th><td>{obj.get('type_of_analysis', 'N/A')}</td></tr>
-            <tr><th>Materie Prime:</th><td>{obj.get('raw_materials', 'N/A')}</td></tr>
-            <tr><th>Provenienza:</th><td>{obj.get('provenance', 'N/A')}</td></tr>
-            <tr><th>Altre Informazioni:</th><td>{obj.get('other_info', 'N/A')}</td></tr>
-            <tr><th>Bollo:</th><td>{'Sì' if obj.get('stamp') else 'No'}</td></tr>
-            <tr><th>Testo del Bollo:</th><td>{obj.get('stamp_text', 'N/A')}</td></tr>
-        </table>
-    """
-
-    # Aggiungi immagini se presenti
-    if obj.get('images'):
-        html += "<div style='margin-top:15px;text-align:center;'>"
-        for img in obj['images']:
-            img_url = img if img.startswith('http') else f"https://capuan-bronzes-db-map.onrender.com/static/uploads/{img}"
-            html += f"<img src='{img_url}' class='popup-image'>"
-        html += "</div>"
-    
-    html += "</div>"
-    return html
