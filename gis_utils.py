@@ -8,10 +8,10 @@ from folium import Element
 def generate_map(geodata):
     """
     Genera una mappa Folium completa con:
-    - Due layer separati per luoghi di conservazione e ritrovamento
+    - Popup completi e funzionanti
+    - Evidenziazione marker corretta
     - Ricerca avanzata con tutti i parametri
-    - Evidenziazione marker al posto del centramento
-    - Gestione delle immagini nei popup
+    - Fix per l'errore '_marker' null
     """
     # Configurazione mappa base
     mymap = folium.Map(
@@ -102,23 +102,30 @@ def generate_map(geodata):
         if storing_point and storing_point.x != 0 and storing_point.y != 0:
             marker = Marker(
                 location=[storing_point.y, storing_point.x],
-                popup=create_popup_content(obj, "Luogo di conservazione"),
+                popup=create_popup_content(obj),
                 icon=folium.Icon(color='blue'),
                 tooltip=f"ID: {obj['unique_id']}"
             )
             marker.add_to(storing_layer)
-            marker_dict[obj['unique_id']] = marker
+            marker_dict[obj['unique_id']] = marker._id  # Memorizza l'ID del marker
 
         # Crea marker per finding spot
         if finding_point and finding_point.x != 0 and finding_point.y != 0:
             marker = Marker(
                 location=[finding_point.y, finding_point.x],
-                popup=create_popup_content(obj, "Luogo di ritrovamento"),
+                popup=create_popup_content(obj),
                 icon=folium.Icon(color='red'),
                 tooltip=f"ID: {obj['unique_id']}"
             )
             marker.add_to(finding_layer)
-            marker_dict[obj['unique_id']] = marker
+            marker_dict[obj['unique_id']] = marker._id  # Memorizza l'ID del marker
+
+    # Aggiungi elementi alla mappa
+    storing_layer.add_to(mymap)
+    finding_layer.add_to(mymap)
+    LayerControl().add_to(mymap)
+    Fullscreen().add_to(mymap)
+
 
     # Funzione per costruire i popup
     def create_popup(objects, title):
@@ -170,14 +177,6 @@ def generate_map(geodata):
 
         popup_content += "</table></div>"
         return popup_content
-
-
-    # Aggiungi elementi alla mappa
-    storing_layer.add_to(mymap)
-    finding_layer.add_to(mymap)
-    LayerControl().add_to(mymap)
-    Fullscreen().add_to(mymap)
-
 
     # Bottone della barra di ricerca
     search_html = """
@@ -326,24 +325,3 @@ def generate_map(geodata):
     
     return mymap
 
-def create_popup_content(obj, title):
-    """Crea il contenuto HTML per i popup dei marker"""
-    html = f"""
-    <div style="max-width:300px;max-height:400px;overflow:auto;">
-        <h4>{title}</h4>
-        <p><strong>ID:</strong> {obj['unique_id']}</p>
-        <p><strong>Cronologia:</strong> {obj.get('chronology', 'N/A')}</p>
-        <p><strong>Luogo conservazione:</strong> {obj.get('storing_place', 'N/A')}</p>
-        <p><strong>Luogo ritrovamento:</strong> {obj.get('finding_spot', 'N/A')}</p>
-    """
-    
-    # Aggiungi immagini se presenti
-    if obj.get('images'):
-        html += "<div style='margin-top:10px;'>"
-        for img in obj['images']:
-            img_url = img if img.startswith('http') else f"https://capuan-bronzes-db-map.onrender.com/static/uploads/{img}"
-            html += f"<img src='{img_url}' class='popup-image'><br>"
-        html += "</div>"
-    
-    html += "</div>"
-    return html
