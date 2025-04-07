@@ -3,6 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <title>Database bronzi capuani</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        form {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        input[type="text"], 
+        input[type="number"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        input[type="checkbox"] {
+            margin-top: 15px;
+        }
+        button[type="submit"] {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+        button[type="submit"]:hover {
+            background: #45a049;
+        }
+        nav ul {
+            list-style-type: none;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        nav ul li {
+            margin: 0 15px;
+        }
+        nav ul li a {
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
     <h1>Database dei bronzi capuani: inserisci un nuovo reperto</h1>
@@ -16,9 +83,26 @@
         <label for="chronology">Cronologia:</label>
         <input type="text" id="chronology" name="chronology"><br><br>
 
-        <!-- Shape -->
+        <!-- Shape - Now a dropdown menu -->
         <label for="shape">Forma:</label>
-        <input type="text" id="shape" name="shape"><br><br>
+        <select id="shape" name="shape" required>
+            <option value="">Seleziona una forma</option>
+            <option value="casseruola">Casseruola</option>
+            <option value="coppa a becco">Coppa a becco</option>
+            <option value="brocca">Brocca</option>
+            <option value="brocca monoansata">Brocca monoansata</option>
+            <option value="brocca a bocca trilobata">Brocca a bocca trilobata</option>
+            <option value="situla">Situla</option>
+            <option value="piede a forma di pelta">Piede a forma di pelta</option>
+            <option value="patera">Patera</option>
+            <option value="piede di situla">Piede di situla</option>
+            <option value="manico di casseruola">Manico di casseruola</option>
+            <option value="manico di patera">Manico di patera</option>
+            <option value="mestolo">Mestolo</option>
+            <option value="bacino">Bacino</option>
+            <option value="colino">Colino</option>
+            <option value="calderone">Calderone</option>
+        </select><br><br>
 
         <!-- Storing Place ID -->
         <label for="storing_place_id">ID Luogo di Conservazione:</label>
@@ -28,20 +112,17 @@
         <label for="storing_place">Luogo di Conservazione (Nome):</label>
         <input type="text" id="storing_place" name="storing_place"><br><br>
 
+        <label for="longitude_storing_place">Longitudine del luogo di conservazione:</label>
+        <input type="text" step="any" name="longitude_storing_place" id="longitude_storing_place"><br><br>
 
-      <label for="longitude_storing_place">Longitudine del luogo di conservazione:</label>
-    <input type="text" step="any" name="longitude_storing_place" id="longitude_storing_place"><br><br>
+        <label for="latitude_storing_place">Latitudine del luogo di conservazione:</label>
+        <input type="text" step="any" name="latitude_storing_place" id="latitude_storing_place"><br><br>
 
-
-    <label for="latitude_storing_place">Latitudine del luogo di conservazione:</label>
-    <input type="text" step="any" name="latitude_storing_place" id="latitude_storing_place"><br><br>
-
-<!-- Inventory Number -->
+        <!-- Inventory Number -->
         <label for="inventory_number">Numero di Inventario:</label>
         <input type="text" id="inventory_number" name="inventory_number"><br><br>
 
-
-<!-- Finding Spot ID -->
+        <!-- Finding Spot ID -->
         <label for="finding_spot_id">ID Luogo di Ritrovamento:</label>
         <input type="number" id="finding_spot_id" name="finding_spot_id"><br><br>
 
@@ -49,12 +130,11 @@
         <label for="finding_spot">Luogo di Ritrovamento (Nome):</label>
         <input type="text" id="finding_spot" name="finding_spot"><br><br>
 
-<label for="longitude_finding_spot">Longitudine del luogo di ritrovamento:</label>
-    <input type="text" step="any" name="longitude_finding_spot" id="longitude_finding_spot"><br><br>
+        <label for="longitude_finding_spot">Longitudine del luogo di ritrovamento:</label>
+        <input type="text" step="any" name="longitude_finding_spot" id="longitude_finding_spot"><br><br>
 
-    <label for="latitude_finding_spot">Latitudine del luogo di ritrovamento:</label>
-    <input type="text" step="any" name="latitude_finding_spot" id="latitude_finding_spot"><br><br>
-
+        <label for="latitude_finding_spot">Latitudine del luogo di ritrovamento:</label>
+        <input type="text" step="any" name="latitude_finding_spot" id="latitude_finding_spot"><br><br>
         
         <!-- Bibliographical Source -->
         <label for="bibliographical_source">Fonte Bibliografica:</label>
@@ -132,22 +212,22 @@
         <label for="stamp_text">Testo del Bollo:</label>
         <input type="text" id="stamp_text" name="stamp_text"><br><br>
     
-    <label for="image1">First Image (optional):</label>
-    <input type="file" id="image1" name="images" accept="image/*">
+        <label for="image1">Prima Immagine (opzionale):</label>
+        <input type="file" id="image1" name="images" accept="image/*">
 
-    <label for="image2">Second Image (optional):</label>
-    <input type="file" id="image2" name="images" accept="image/*">
+        <label for="image2">Seconda Immagine (opzionale):</label>
+        <input type="file" id="image2" name="images" accept="image/*">
         
         <!-- Submit Button -->
         <button type="submit">Inserisci</button>
     </form>
-<nav>
-    <ul>
-        <li><a href="/">Home</a></li>
-        <li><a href="/view_data">View Data</a></li>
-        <li><a href="/map">Map</a></li>
-    </ul>
-</nav>
-
+    
+    <nav>
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/view_data">Visualizza Dati</a></li>
+            <li><a href="/map">Mappa</a></li>
+        </ul>
+    </nav>
 </body>
 </html>
