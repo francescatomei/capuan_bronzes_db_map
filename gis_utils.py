@@ -174,21 +174,22 @@ def generate_map(geodata):
         popup_content += "</table></div>"
         return popup_content
 
-# Crea i marker con le nuove modifiche
+# Crea i marker per storing places
 for (lat, lon), objects in storing_places.items():
     storing_place_name = objects[0].get('storing_place', 'Storing Place')
     Marker(
         location=[lat, lon],
-        popup=Popup(create_popup(objects, f"Oggetti conservati in: {storing_place_name}"), 
+        popup=Popup(create_popup(objects, f"Oggetti conservati in: {storing_place_name}"), max_width=700),
         tooltip=storing_place_name,
         icon=folium.Icon(color="blue")
     ).add_to(storing_layer)
 
+# Crea i marker per finding spots
 for (lat, lon), objects in finding_spots.items():
     finding_spot_name = objects[0].get('finding_spot', 'Finding Spot')
     Marker(
         location=[lat, lon],
-        popup=Popup(create_popup(objects, f"Oggetti rinvenuti in: {finding_spot_name}"),
+        popup=Popup(create_popup(objects, f"Oggetti rinvenuti in: {finding_spot_name}"), max_width=700),
         tooltip=finding_spot_name,
         icon=folium.Icon(color="red")
     ).add_to(finding_layer)
