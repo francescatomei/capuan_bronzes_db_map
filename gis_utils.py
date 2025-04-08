@@ -184,7 +184,7 @@ def generate_map(geodata):
             try:
                 Marker(
                     location=[lat, lon],
-                    popup=Popup(create_detailed_popup(objs, "storing"),
+                    popup=Popup(create_detailed_popup(objs, "storing"), max_width=750),
                     tooltip=objs[0].get('storing_place', 'Conservazione'),
                     icon=folium.Icon(color="blue", icon="archive")
                 ).add_to(storing_layer)
@@ -196,14 +196,13 @@ def generate_map(geodata):
             try:
                 Marker(
                     location=[lat, lon],
-                    popup=Popup(create_detailed_popup(objs, "finding")),
+                    popup=Popup(create_detailed_popup(objs, "finding"), max_width=750),
                     tooltip=objs[0].get('finding_spot', 'Ritrovamento'),
                     icon=folium.Icon(color="red", icon="search")
                 ).add_to(finding_layer)
             except Exception as e:
                 logger.error(f"Errore creazione marker ritrovamento: {str(e)}")
                 continue
-
         # Aggiungi elementi alla mappa
         storing_layer.add_to(mymap)
         finding_layer.add_to(mymap)
