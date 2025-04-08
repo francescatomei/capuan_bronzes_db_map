@@ -121,9 +121,9 @@ function executeSearch() {
         stamp_text: document.getElementById('search-stamp_text').value.trim(),
 
         // Campi Booleani
-        decoration: document.getElementById('search-decoration').checked ? "true" : "false",
-        archaeometry_analyses: document.getElementById('search-archaeometry_analyses').checked ? "true" : "false",
-        stamp: document.getElementById('search-stamp').checked ? "true" : "false"
+        decoration: document.getElementById('search-decoration').checked ? "Sì" : "No",
+        archaeometry_analyses: document.getElementById('search-archaeometry_analyses').checked ? "Sì" : "No",
+        stamp: document.getElementById('search-stamp').checked ? "Sì" : "No"
     };
 
     fetch('/search', {
@@ -145,26 +145,19 @@ function executeSearch() {
         let table = `
             <table border='1' class="responsive-table">
                 <thead>
-                    <tr>
-                        <th>ID</th>
+                    <tr>                       
                         <th>ID Unico</th>
                         <th>Cronologia</th>
-                        <th>Forma</th>
-                        <th>ID Luogo di Conservazione</th>
-                        <th>Luogo di Conservazione</th>
-                        <th>Longitudine del luogo di conservazione</th>
-                        <th>Latitudine del luogo di conservazione</th>
+                        <th>Forma</th>                     
+                        <th>Luogo di Conservazione</th>                        
                         <th>Numero di Inventario</th>
-                        <th>ID Luogo di Ritrovamento</th>
                         <th>Luogo di Ritrovamento</th>
-                        <th>Longitudine del luogo di ritrovamento</th>
-                        <th>Latitudine del luogo di ritrovamento</th>
-                        <th>Fonte Bibliografica</th>
+                        <th>Fonte Bibliografica del reperto</th>
                         <th>Dimensioni</th>
                         <th>Descrizione</th>
                         <th>Luogo di Produzione</th>
                         <th>Tipologia</th>
-                        <th>Riferimenti Bibliografici</th>
+                        <th>Riferimenti Bibliografici sulla tipologia</th>
                         <th>Anse/manici</th>
                         <th>Base/piede</th>
                         <th>Decorazione</th>
@@ -241,25 +234,18 @@ function executeSearch() {
     <table id="dataTable" class="responsive-table">
         <thead>
             <tr>
-                <th>ID</th>
                 <th>ID Unico</th>
                 <th>Cronologia</th>
                 <th>Forma</th>
-                <th>ID Luogo di Conservazione</th>
                 <th>Luogo di Conservazione</th>
-                <th>Longitudine del luogo di conservazione</th>
-                <th>Latitudine del luogo di conservazione</th>
                 <th>Numero di Inventario</th>
-                <th>ID Luogo di Ritrovamento</th>
                 <th>Luogo di Ritrovamento</th>
-                <th>Longitudine del luogo di ritrovamento</th>
-                <th>Latitudine del luogo di ritrovamento</th>
-                <th>Fonte Bibliografica</th>
+                <th>Fonte Bibliografica del reperto</th>
                 <th>Dimensioni</th>
                 <th>Descrizione</th>
                 <th>Luogo di Produzione</th>
                 <th>Tipologia</th>
-                <th>Riferimenti Bibliografici</th>
+                <th>Riferimenti Bibliografici sulla tipologia</th>
                 <th>Anse/manici</th>
                 <th>Base/piede</th>
                 <th>Decorazione</th>
@@ -273,7 +259,7 @@ function executeSearch() {
                 <th>Altre Informazioni</th>
                 <th>Bollo</th>
                 <th>Testo del Bollo</th>
-                <th>Azioni</th>
+                <th>Immagini</th>
             </tr>
         </thead>
         <tbody id="data-body">

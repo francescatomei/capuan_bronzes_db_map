@@ -10,6 +10,8 @@ def generate_map(geodata):
     Genera una mappa Folium con due livelli organizzati:
     - Storing Places: Punti basati su storing_place_location con tabella di popup e immagini.
     - Finding Spots: Punti basati su finding_spot_location con tabella di popup e immagini.
+    - Separazione visiva tra record nei popup
+    - Tooltip contestuali al passaggio del mouse
     Include un pannello di ricerca avanzata per query dettagliate sui campi del database.
     """
     # Crea una mappa centrata con impostazioni robuste
@@ -172,23 +174,24 @@ def generate_map(geodata):
         popup_content += "</table></div>"
         return popup_content
 
-    # Crea i marker per storing places
-    for (lat, lon), objects in storing_places.items():
-        Marker(
-            location=[lat, lon],
-            popup=Popup(create_popup(objects, "Storing Place Objects"), max_width=700),
-            tooltip="Storing Place",
-            icon=folium.Icon(color="blue")
-        ).add_to(storing_layer)
+# Crea i marker con le nuove modifiche
+for (lat, lon), objects in storing_places.items():
+    storing_place_name = objects[0].get('storing_place', 'Storing Place')
+    Marker(
+        location=[lat, lon],
+        popup=Popup(create_popup(objects, f"Oggetti conservati in: {storing_place_name}"), 
+        tooltip=storing_place_name,
+        icon=folium.Icon(color="blue")
+    ).add_to(storing_layer)
 
-    # Crea i marker per finding spots
-    for (lat, lon), objects in finding_spots.items():
-        Marker(
-            location=[lat, lon],
-            popup=Popup(create_popup(objects, "Finding Spot Objects"), max_width=700),
-            tooltip="Finding Spot",
-            icon=folium.Icon(color="red")
-        ).add_to(finding_layer)
+for (lat, lon), objects in finding_spots.items():
+    finding_spot_name = objects[0].get('finding_spot', 'Finding Spot')
+    Marker(
+        location=[lat, lon],
+        popup=Popup(create_popup(objects, f"Oggetti rinvenuti in: {finding_spot_name}"),
+        tooltip=finding_spot_name,
+        icon=folium.Icon(color="red")
+    ).add_to(finding_layer)
 
     # Aggiungi i layer alla mappa
     storing_layer.add_to(mymap)
