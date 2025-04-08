@@ -4,263 +4,211 @@ from folium.plugins import Fullscreen
 from shapely.wkb import loads as wkb_loads
 from collections import defaultdict
 from folium import Element
+import logging
+
+# Configura il logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def generate_map(geodata):
     """
-    Genera una mappa Folium con due livelli organizzati:
-    - Storing Places: Punti basati su storing_place_location con tabella di popup e immagini.
-    - Finding Spots: Punti basati su finding_spot_location con tabella di popup e immagini.
-    - Separazione visiva tra record nei popup
-    - Tooltip contestuali al passaggio del mouse
-    Include un pannello di ricerca avanzata per query dettagliate sui campi del database.
+    Genera una mappa Folium con popup dettagliati e gestione degli errori
     """
-    # Crea una mappa centrata con impostazioni robuste
-    mymap = folium.Map(
-        location=[41.8719, 12.5674],
-        zoom_start=6,
-        tiles='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-        attr='OpenStreetMap',
-        control_scale=True,
-        height='100%',
-        width='100%'
-    )
-
-    # Aggiungi stili CSS per garantire la visualizzazione corretta
-    mymap.get_root().html.add_child(Element("""
-    <style>
-        html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-        }
-        .folium-map {
-            position: absolute !important;
-            top: 0 !important;
-            bottom: 0 !important;
-            right: 0 !important;
-            left: 0 !important;
-            z-index: 1;
-        }
-        /* Stili per i popup */
-        .popup-container {
-            background-color: white;
-            padding: 15px;
-            max-width: 700px;
-            max-height: 500px;
-            overflow-y: auto;
-        }
-        .popup-title {
-            text-align: center;
-            margin-bottom: 15px;
-            color: #333;
-            font-size: 1.2em;
-        }
-        .popup-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 15px;
-        }
-        .popup-table th {
-            background-color: #f2f2f2;
-            text-align: left;
-            padding: 8px;
-            width: 30%;
-        }
-        .popup-table td {
-            padding: 8px;
-            border: 1px solid #ddd;
-        }
-        .popup-divider {
-            margin: 20px 0;
-            border-top: 2px dashed #ccc;
-        }
-        .popup-image {
-            max-width: 200px;
-            max-height: 200px;
-            margin: 5px;
-        }
-        .search-container {
-            position: absolute;
-            top: 10px;
-            left: 60px;
-            z-index: 1000;
-        }
-        #search-panel {
-            z-index: 1000;
-            background: white;
-            padding: 15px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.2);
-            width: 300px;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-        .search-control {
-            margin-bottom: 10px;
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        .search-button {
-            background: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            width: 100%;
-        }
-        .search-button:hover {
-            background: #0056b3;
-        }
-        .search-results {
-            margin-top: 15px;
-        }
-        .search-results table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .search-results th, .search-results td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        .search-results th {
-            background-color: #f2f2f2;
-        }
-    </style>
-    """))
-
-    # Crea i gruppi per i due livelli
-    storing_layer = FeatureGroup(name="Luoghi di conservazione", control=True)
-    finding_layer = FeatureGroup(name="Luoghi di rinvenimento", control=True)
-
-    # Organizza i dati per posizione
-    storing_places = defaultdict(list)
-    finding_spots = defaultdict(list)
-    
-
-    for obj in geodata:
-        # Decodifica le geometrie
-        storing_point = None
-        finding_point = None
-
-        if 'storing_place_location' in obj and obj['storing_place_location']:
-            storing_point = wkb_loads(obj['storing_place_location'], hex=True)
-        if 'finding_spot_location' in obj and obj['finding_spot_location']:
-            finding_point = wkb_loads(obj['finding_spot_location'], hex=True)
-
-        # Ignora punti con coordinate nulle o zero
-        if storing_point and (storing_point.x != 0 and storing_point.y != 0):
-            storing_places[(storing_point.y, storing_point.x)].append(obj)
-            markers.append({"unique_id": obj['unique_id'], "latitude": storing_point.y, "longitude": storing_point.x})
-
-        if finding_point and (finding_point.x != 0 and finding_point.y != 0):
-            finding_spots[(finding_point.y, finding_point.x)].append(obj)
-            markers.append({"unique_id": obj['unique_id'], "latitude": finding_point.y, "longitude": finding_point.x})
-
-    # Funzione per costruire i popup (mantenendo il formato originale)
-    def create_popup(objects, title):
-        popup_content = """
-        <div class="popup-container">
-            <button onclick="this.parentElement.requestFullscreen()" style="float:right;">Fullscreen</button>
-            <div class="popup-title">{}</div>
-        """.format(title)
+    try:
+        # Verifica che geodata sia valido
+        if not isinstance(geodata, list):
+            raise ValueError("I dati geografici devono essere una lista")
         
-        for i, obj in enumerate(objects):
-            if i > 0:
-                popup_content += '<div class="popup-divider"></div>'
+        logger.info(f"Inizio generazione mappa con {len(geodata)} oggetti")
+
+        # Crea la mappa base
+        mymap = folium.Map(
+            location=[41.8719, 12.5674],
+            zoom_start=6,
+            tiles='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+            attr='OpenStreetMap',
+            control_scale=True,
+            height='100%',
+            width='100%'
+        )
+
+        # Aggiungi stili CSS
+        mymap.get_root().html.add_child(Element("""
+        <style>
+            /* Stili esistenti... */
+            .popup-container {
+                max-width: 700px;
+                max-height: 500px;
+                overflow-y: auto;
+                padding: 10px;
+            }
+            .popup-divider {
+                margin: 15px 0;
+                border-top: 2px solid #eee;
+            }
+            .popup-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 10px;
+            }
+            .popup-table th, .popup-table td {
+                border: 1px solid #ddd;
+                padding: 8px;
+                text-align: left;
+            }
+            .popup-table th {
+                background-color: #f2f2f2;
+            }
+            .popup-image {
+                max-width: 200px;
+                max-height: 200px;
+                margin: 5px;
+            }
+        </style>
+        """))
+
+        # Crea i layer
+        storing_layer = FeatureGroup(name="Luoghi di conservazione", control=True)
+        finding_layer = FeatureGroup(name="Luoghi di rinvenimento", control=True)
+
+        # Organizza i dati per coordinate
+        storing_places = defaultdict(list)
+        finding_spots = defaultdict(list)
+
+        for obj in geodata:
+            try:
+                # Decodifica geometrie con gestione errori
+                storing_point = None
+                finding_point = None
                 
-            popup_content += """
-            <table class="popup-table">
-                <tr>
-                    <th>ID Unico</th><th>Cronologia</th><th>Forma</th><th>Luogo di Conservazione</th>
-                    <th>Luogo di Ritrovamento</th><th>Numero di Inventario</th><th>Fonte Bibliografica</th>
-                    <th>Dimensioni</th><th>Descrizione</th><th>Luogo di Produzione</th>
-                    <th>Tipologia</th><th>Riferimenti Bibliografici</th><th>Anse/manici</th>
-                    <th>Base/piede</th><th>Decorazione</th><th>Tecniche decorative</th>
-                    <th>Iconografia</th><th>Tecniche produttive</th>
-                    <th>Analisi Archeometriche</th><th>Tipo di Analisi</th>
-                    <th>Materie Prime</th><th>Provenienza</th><th>Altre Informazioni</th>
-                    <th>Bollo</th><th>Testo del Bollo</th>
-                </tr>
-                <tr>
-                    <td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td>
-                    <td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td>
-                    <td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td>
-                    <td>{}</td><td>{}</td><td>{}</td><td>{}</td>
-                </tr>
-            """.format(
-                obj.get('unique_id', 'N/A'),
-                obj.get('chronology', 'N/A'),
-                obj.get('shape', 'N/A'),
-                obj.get('storing_place', 'N/A'),
-                obj.get('finding_spot', 'N/A'),
-                obj.get('inventory_number', 'N/A'),
-                obj.get('bibliographical_source', 'N/A'),
-                obj.get('dimensions', 'N/A'),
-                obj.get('description', 'N/A'),
-                obj.get('production_place', 'N/A'),
-                obj.get('typology', 'N/A'),
-                obj.get('bibliographic_references', 'N/A'),
-                obj.get('handles', 'N/A'),
-                obj.get('foot', 'N/A'),
-                'No' if not obj.get('decoration') else 'Yes',
-                obj.get('decoration_techniques', 'N/A'),
-                obj.get('iconography', 'N/A'),
-                obj.get('manufacturing_techniques', 'N/A'),
-                'No' if not obj.get('archaeometry_analyses') else 'Yes',
-                obj.get('type_of_analysis', 'N/A'),
-                obj.get('raw_materials', 'N/A'),
-                obj.get('provenance', 'N/A'),
-                obj.get('other_info', 'N/A'),
-                'No' if not obj.get('stamp') else 'Yes',
-                obj.get('stamp_text', 'N/A')
-            )
+                if obj.get('storing_place_location'):
+                    storing_point = wkb_loads(obj['storing_place_location'], hex=True)
+                    if storing_point.x != 0 and storing_point.y != 0:
+                        storing_places[(storing_point.y, storing_point.x)].append(obj)
+                
+                if obj.get('finding_spot_location'):
+                    finding_point = wkb_loads(obj['finding_spot_location'], hex=True)
+                    if finding_point.x != 0 and finding_point.y != 0:
+                        finding_spots[(finding_point.y, finding_point.x)].append(obj)
+                        
+            except Exception as e:
+                logger.warning(f"Errore nel processare oggetto {obj.get('unique_id')}: {str(e)}")
+                continue
+
+        # Funzione per creare popup dettagliati
+        def create_detailed_popup(objects, location_type):
+            location_name = objects[0].get('storing_place' if location_type == "storing" else 'finding_spot', 'Luogo sconosciuto')
+            popup_content = f"""
+            <div class="popup-container">
+                <h3>Oggetti {'conservati' if location_type == 'storing' else 'rinvenuti'} in: {location_name}</h3>
+            """
             
-            if obj.get('images'):
+            for i, obj in enumerate(objects):
+                if i > 0:
+                    popup_content += '<div class="popup-divider"></div>'
+                
                 popup_content += """
-                <tr>
-                    <td colspan="25" style="text-align: center;">
-                """
-                for img in obj['images']:
-                    img_url = img if img.startswith("http") else f"https://capuan-bronzes-db-map.onrender.com/static/uploads/{img}"
-                    popup_content += f'<img src="{img_url}" class="popup-image">'
-                popup_content += "</td></tr>"
+                <table class="popup-table">
+                    <tr>
+                        <th>ID Unico</th><th>Cronologia</th><th>Forma</th><th>Luogo Conservazione</th>
+                        <th>Luogo Ritrovamento</th><th>Numero Inventario</th><th>Fonte Bibliografica</th>
+                    </tr>
+                    <tr>
+                        <td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td>
+                    </tr>
+                    <tr>
+                        <th>Dimensioni</th><th>Descrizione</th><th>Luogo Produzione</th><th>Tipologia</th>
+                        <th>Riferimenti</th><th>Anse/manici</th><th>Base/piede</th>
+                    </tr>
+                    <tr>
+                        <td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td>
+                    </tr>
+                    <tr>
+                        <th>Decorazione</th><th>Tecniche decorative</th><th>Iconografia</th>
+                        <th>Tecniche produttive</th><th>Analisi</th><th>Tipo Analisi</th><th>Materie Prime</th>
+                    </tr>
+                    <tr>
+                        <td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td>
+                    </tr>
+                    <tr>
+                        <th>Provenienza</th><th>Altre Info</th><th>Bollo</th><th>Testo Bollo</th>
+                    </tr>
+                    <tr>
+                        <td>{}</td><td>{}</td><td>{}</td><td>{}</td>
+                    </tr>
+                """.format(
+                    obj.get('unique_id', 'N/A'),
+                    obj.get('chronology', 'N/A'),
+                    obj.get('shape', 'N/A'),
+                    obj.get('storing_place', 'N/A'),
+                    obj.get('finding_spot', 'N/A'),
+                    obj.get('inventory_number', 'N/A'),
+                    obj.get('bibliographical_source', 'N/A'),
+                    obj.get('dimensions', 'N/A'),
+                    obj.get('description', 'N/A'),
+                    obj.get('production_place', 'N/A'),
+                    obj.get('typology', 'N/A'),
+                    obj.get('bibliographic_references', 'N/A'),
+                    obj.get('handles', 'N/A'),
+                    obj.get('foot', 'N/A'),
+                    'Sì' if obj.get('decoration') else 'No',
+                    obj.get('decoration_techniques', 'N/A'),
+                    obj.get('iconography', 'N/A'),
+                    obj.get('manufacturing_techniques', 'N/A'),
+                    'Sì' if obj.get('archaeometry_analyses') else 'No',
+                    obj.get('type_of_analysis', 'N/A'),
+                    obj.get('raw_materials', 'N/A'),
+                    obj.get('provenance', 'N/A'),
+                    obj.get('other_info', 'N/A'),
+                    'Sì' if obj.get('stamp') else 'No',
+                    obj.get('stamp_text', 'N/A')
+                )
+                
+                if obj.get('images'):
+                    popup_content += """
+                    <tr>
+                        <td colspan="7" style="text-align:center;">
+                    """
+                    for img in obj['images']:
+                        img_url = img if img.startswith("http") else f"https://capuan-bronzes-db-map.onrender.com/static/uploads/{img}"
+                        popup_content += f'<img src="{img_url}" class="popup-image">'
+                    popup_content += "</td></tr>"
+                
+                popup_content += "</table>"
             
-            popup_content += "</table>"
-        
-        popup_content += "</div>"
-        return popup_content
+            popup_content += "</div>"
+            return popup_content
 
-    # Aggiungi marker con tooltip personalizzati
-    for (lat, lon), objs in storing_places.items():
-        location_name = objs[0].get('storing_place', 'Luogo di conservazione')
-        Marker(
-            location=[lat, lon],
-            popup=Popup(create_popup(objs, "Oggetti conservati in: " + location_name), max_width=750),
-            tooltip=location_name,
-            icon=folium.Icon(color="blue", icon="archive")
-        ).add_to(storing_layer)
+        # Aggiungi marker con gestione errori
+        for (lat, lon), objs in storing_places.items():
+            try:
+                Marker(
+                    location=[lat, lon],
+                    popup=Popup(create_detailed_popup(objs, "storing"),
+                    tooltip=objs[0].get('storing_place', 'Conservazione'),
+                    icon=folium.Icon(color="blue", icon="archive")
+                ).add_to(storing_layer)
+            except Exception as e:
+                logger.error(f"Errore creazione marker conservazione: {str(e)}")
+                continue
 
-    for (lat, lon), objs in finding_spots.items():
-        location_name = objs[0].get('finding_spot', 'Luogo di ritrovamento')
-        Marker(
-            location=[lat, lon],
-            popup=Popup(create_popup(objs, "Oggetti rinvenuti in: " + location_name), max_width=750),
-            tooltip=location_name,
-            icon=folium.Icon(color="red", icon="search")
-        ).add_to(finding_layer)
+        for (lat, lon), objs in finding_spots.items():
+            try:
+                Marker(
+                    location=[lat, lon],
+                    popup=Popup(create_detailed_popup(objs, "finding")),
+                    tooltip=objs[0].get('finding_spot', 'Ritrovamento'),
+                    icon=folium.Icon(color="red", icon="search")
+                ).add_to(finding_layer)
+            except Exception as e:
+                logger.error(f"Errore creazione marker ritrovamento: {str(e)}")
+                continue
 
-    # Aggiungi i layer alla mappa
-    storing_layer.add_to(mymap)
-    finding_layer.add_to(mymap)
-
-    # Aggiungi il controllo di layer e fullscreen
-    LayerControl().add_to(mymap)
-    Fullscreen().add_to(mymap)
+        # Aggiungi elementi alla mappa
+        storing_layer.add_to(mymap)
+        finding_layer.add_to(mymap)
+        LayerControl().add_to(mymap)
+        Fullscreen().add_to(mymap)
 
     # Bottone della barra di ricerca con TUTTI i parametri originali
     search_button_html = """
@@ -428,4 +376,19 @@ def generate_map(geodata):
     """
     mymap.get_root().html.add_child(Element(search_button_html))
     
-    return mymap
+        logger.info("Mappa generata con successo")
+        return mymap
+
+    except Exception as e:
+        logger.error(f"Errore nella generazione della mappa: {str(e)}", exc_info=True)
+        # Crea una mappa di fallback con messaggio di errore
+        error_map = folium.Map(location=[41.8719, 12.5674], zoom_start=6)
+        error_html = f"""
+        <div style="position:fixed;top:10px;left:10px;z-index:1000;background:white;padding:20px;border:2px solid red;">
+            <h3>Errore nella generazione della mappa</h3>
+            <p>{str(e)}</p>
+            <p>Verifica i log del server per maggiori dettagli</p>
+        </div>
+        """
+        error_map.get_root().html.add_child(Element(error_html))
+        return error_map
