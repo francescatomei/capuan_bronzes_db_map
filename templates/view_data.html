@@ -229,8 +229,8 @@ function executeSearch() {
         resultsContainer.innerHTML += table;
     })
     .catch(error => console.error('Errore:', error));
-}</script>
-    <!-- Tabella principale -->
+}
+</script>    <!-- Tabella principale -->
     <table id="dataTable" class="responsive-table">
         <thead>
             <tr>
@@ -238,7 +238,7 @@ function executeSearch() {
                 <th>ID Unico</th>
                 <th>Cronologia</th>
                 <th>Forma</th>
-                <th>ID Luogo di Conservazione</th
+                <th>ID Luogo di Conservazione</th>
                 <th>Luogo di Conservazione</th>
                 <th>Longitudine del luogo di conservazione</th>
                 <th>Latitudine del luogo di conservazione</th>
@@ -247,12 +247,12 @@ function executeSearch() {
                 <th>Luogo di Ritrovamento</th>
                 <th>Longitudine del luogo di ritrovamento</th>
                 <th>Latitudine del luogo di ritrovamento</th>
-                <th>Fonte Bibliografica del reperto</th>
+                <th>Fonte Bibliografica</th>
                 <th>Dimensioni</th>
                 <th>Descrizione</th>
                 <th>Luogo di Produzione</th>
                 <th>Tipologia</th>
-                <th>Riferimenti Bibliografici sulla tipologia</th>
+                <th>Riferimenti Bibliografici</th>
                 <th>Anse/manici</th>
                 <th>Base/piede</th>
                 <th>Decorazione</th>
@@ -266,8 +266,8 @@ function executeSearch() {
                 <th>Altre Informazioni</th>
                 <th>Bollo</th>
                 <th>Testo del Bollo</th>
-                <th>Immagini</th>
-            </tr>
+                <th>Azioni</th>
+            </tr>        
         </thead>
         <tbody id="data-body">
             {% for obj in archaeological_objects %}
