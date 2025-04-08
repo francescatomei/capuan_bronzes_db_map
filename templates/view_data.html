@@ -234,19 +234,12 @@ function executeSearch() {
     <table id="dataTable" class="responsive-table">
         <thead>
             <tr>
-                <th>ID</th>
                 <th>ID Unico</th>
                 <th>Cronologia</th>
                 <th>Forma</th>
-                <th>ID Luogo di Conservazione</th>
                 <th>Luogo di Conservazione</th>
-                <th>Longitudine del luogo di conservazione</th>
-                <th>Latitudine del luogo di conservazione</th>
                 <th>Numero di Inventario</th>
-                <th>ID Luogo di Ritrovamento</th>
                 <th>Luogo di Ritrovamento</th>
-                <th>Longitudine del luogo di ritrovamento</th>
-                <th>Latitudine del luogo di ritrovamento</th>
                 <th>Fonte Bibliografica</th>
                 <th>Dimensioni</th>
                 <th>Descrizione</th>
@@ -266,25 +259,18 @@ function executeSearch() {
                 <th>Altre Informazioni</th>
                 <th>Bollo</th>
                 <th>Testo del Bollo</th>
-                <th>Azioni</th>
+                <th>Immagini</th>
             </tr>        
         </thead>
         <tbody id="data-body">
             {% for obj in archaeological_objects %}
             <tr>
-                <td>{{ obj.id }}</td>
                 <td>{{ obj.unique_id }}</td>
                 <td>{{ obj.chronology }}</td>
                 <td>{{ obj.shape }}</td>
-                <td>{{ obj.storing_place_id }}</td>
                 <td>{{ obj.storing_place }}</td>
-                <td>{{ obj.longitude_storing_place }}</td>
-                <td>{{ obj.latitude_storing_place }}</td>
                 <td>{{ obj.inventory_number }}</td>
-                <td>{{ obj.finding_spot_id }}</td>
                 <td>{{ obj.finding_spot }}</td>
-                <td>{{ obj.longitude_finding_spot }}</td>
-                <td>{{ obj.latitude_finding_spot }}</td>
                 <td>{{ obj.bibliographical_source }}</td>
                 <td>{{ obj.dimensions }}</td>
                 <td>{{ obj.description }}</td>
