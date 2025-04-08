@@ -152,7 +152,7 @@ function executeSearch() {
                         <th>Luogo di Conservazione</th>                        
                         <th>Numero di Inventario</th>
                         <th>Luogo di Ritrovamento</th>
-                        <th>Fonte Bibliografica del reperto</th>
+                        <th>Fonte Bibliografica relativa al reperto</th>
                         <th>Dimensioni</th>
                         <th>Descrizione</th>
                         <th>Luogo di Produzione</th>
@@ -187,20 +187,13 @@ function executeSearch() {
 
             // Aggiungi una riga per ogni risultato
             table += `
-                <tr>
-                    <td>${obj.id || "N/A"}</td>
+                <tr>>
                     <td>${obj.unique_id || "N/A"}</td>
                     <td>${obj.chronology || "N/A"}</td>
                     <td>${obj.shape || "N/A"}</td>
-                    <td>${obj.storing_place_id || "N/A"}</td>
                     <td>${obj.storing_place || "N/A"}</td>
-                    <td>${obj.longitude_storing_place || "N/A"}</td>
-                    <td>${obj.latitude_storing_place || "N/A"}</td>
                     <td>${obj.inventory_number || "N/A"}</td>
-                    <td>${obj.finding_spot_id || "N/A"}</td>
                     <td>${obj.finding_spot || "N/A"}</td>
-                    <td>${obj.longitude_finding_spot || "N/A"}</td>
-                    <td>${obj.latitude_finding_spot || "N/A"}</td>
                     <td>${obj.bibliographical_source || "N/A"}</td>
                     <td>${obj.dimensions || "N/A"}</td>
                     <td>${obj.description || "N/A"}</td>
@@ -240,12 +233,12 @@ function executeSearch() {
                 <th>Luogo di Conservazione</th>
                 <th>Numero di Inventario</th>
                 <th>Luogo di Ritrovamento</th>
-                <th>Fonte Bibliografica</th>
+                <th>Fonte Bibliografica relativa al reperto</th>
                 <th>Dimensioni</th>
                 <th>Descrizione</th>
                 <th>Luogo di Produzione</th>
                 <th>Tipologia</th>
-                <th>Riferimenti Bibliografici</th>
+                <th>Riferimenti Bibliografici sulla tipologia</th>
                 <th>Anse/manici</th>
                 <th>Base/piede</th>
                 <th>Decorazione</th>
