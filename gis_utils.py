@@ -127,21 +127,31 @@ def generate_map(geodata):
             markers.append({"unique_id": obj['unique_id'], "latitude": finding_point.y, "longitude": finding_point.x})
 
 def create_popup(objects, title):
-    popup_content = """
-    <div style='background-color:white; overflow:auto; max-height:500px; max-width:700px;'>
-        <button onclick="this.parentElement.requestFullscreen()" style="float:right; margin-bottom:5px; padding:3px 8px; background:#007bff; color:white; border:none; border-radius:3px; cursor:pointer;">Fullscreen</button>
-        <table border='1' style='width:100%; border-collapse:collapse; font-size:12px; border: 2px solid #ddd;'>
-    """
-    
-    for obj_idx, obj in enumerate(objects):
-        # Aggiungi un separatore tra oggetti diversi
-        if obj_idx > 0:
-            popup_content += """
-            <tr>
-                <td colspan='2' style='padding:5px; background-color:#f8f9fa; text-align:center; border-top: 2px solid #ddd;'>
-                </td>
-            </tr>
-            """
+    try:
+        if not objects or not isinstance(objects, list):
+            return "<div>Nessun dato disponibile</div>"
+
+        popup_content = """
+        <div style='background-color:white; overflow:auto; max-height:500px; max-width:700px;'>
+            <button onclick="this.parentElement.requestFullscreen()" 
+                    style="float:right; margin:5px; padding:3px 8px; 
+                           background:#007bff; color:white; border:none; 
+                           border-radius:3px; cursor:pointer;">
+                Fullscreen
+            </button>
+            <table style='width:100%; border-collapse:collapse; font-size:12px; 
+                          border:1px solid #ddd; margin-top:5px;'>
+        """
+
+        for obj_idx, obj in enumerate(objects):
+            if not isinstance(obj, dict):
+                continue
+
+            # Aggiungi separatore tra oggetti
+            if obj_idx > 0:
+                popup_content += """
+                <tr><td colspan='2' style='border-top:2px solid #ddd; height:5px;'></td></tr>
+                """
         
         # Lista ordinata dei campi da visualizzare
         fields = [
@@ -193,29 +203,30 @@ def create_popup(objects, title):
                 <td colspan='2' style='padding:10px; text-align:center; border: 1px solid #ddd;'>
             """
             
-            for image in obj['images']:
-                if image.startswith("http"):
-                    image_url = image
-                else:
-                    image_url = f"https://capuan-bronzes-db-map.onrender.com/static/uploads/{image}"
-                
-                popup_content += f"""
-                <div style='display:inline-block; margin:5px; border:1px solid #ddd; padding:3px;'>
-                    <img src='{image_url}' style='max-width:180px; max-height:180px;'><br>
-                    <small style='font-size:10px;'>{image.split('/')[-1]}</small>
-                </div>
-                """
-            
-            popup_content += """
-                </td>
-            </tr>
-            """
-    
-    popup_content += """
-        </table>
-    </div>
-    """
-    return popup_content
+                for image in obj['images'] if isinstance(obj['images'], list) else []:
+                    try:
+                        if isinstance(image, str):
+                            image_url = (image if image.startswith("http") else 
+                                        f"/static/uploads/{image}")
+                            popup_content += f"""
+                            <div style='display:inline-block; margin:5px;'>
+                                <img src='{image_url}' 
+                                     style='max-width:150px; max-height:150px; 
+                                            border:1px solid #ddd; padding:2px;'>
+                            </div>
+                            """
+                    except Exception as img_error:
+                        print(f"Errore nel processing dell'immagine: {img_error}")
+
+                popup_content += "</td></tr>"
+
+        popup_content += "</table></div>"
+        return popup_content
+
+    except Exception as e:
+        print(f"Errore nella generazione del popup: {str(e)}")
+        return "<div>Errore nel caricamento dei dati</div>"
+
     # Crea i marker per storing places
     for (lat, lon), objects in storing_places.items():
         Marker(
