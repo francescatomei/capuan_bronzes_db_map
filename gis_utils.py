@@ -126,70 +126,96 @@ def generate_map(geodata):
             finding_spots[(finding_point.y, finding_point.x)].append(obj)
             markers.append({"unique_id": obj['unique_id'], "latitude": finding_point.y, "longitude": finding_point.x})
 
-    def create_popup(objects, title):
-        popup_content = """
-        <div style='background-color:white; overflow:auto; max-height:500px; max-width:700px;'>
-            <button onclick="this.parentElement.requestFullscreen()" style="float:right; margin-bottom:5px; padding:3px 8px; background:#007bff; color:white; border:none; border-radius:3px; cursor:pointer;">Fullscreen</button>
-            <h3 style='margin-top:0;'>{}</h3>
-            <table border='1' style='width:100%; border-collapse:collapse; font-size:12px;'>
-                <tr>
-                    <th>ID Unico</th><th>Cronologia</th><th>Forma</th><th>Luogo di Conservazione</th>
-                    <th>Luogo di Ritrovamento</th><th>Numero di Inventario</th><th>Fonte Bibliografica</th>
-                    <th>Dimensioni</th><th>Descrizione</th><th>Luogo di Produzione</th>
-                    <th>Tipologia</th><th>Riferimenti Bibliografici</th><th>Anse/manici</th>
-                    <th>Base/piede</th><th>Decorazione</th><th>Tecniche decorative</th>
-                    <th>Iconografia</th><th>Tecniche produttive</th>
-                    <th>Analisi Archeometriche</th><th>Tipo di Analisi</th>
-                    <th>Materie Prime</th><th>Provenienza</th><th>Altre Informazioni</th>
-                    <th>Bollo</th><th>Testo del Bollo</th>
-                </tr>
-        """.format(title)
-
-        for obj in objects:
-            popup_content += f"""
-                <tr>
-                    <td>{obj.get('unique_id', 'N/A')}</td>
-                    <td>{obj.get('chronology', 'N/A')}</td>
-                    <td>{obj.get('shape', 'N/A')}</td>
-                    <td>{obj.get('storing_place', 'N/A')}</td>
-                    <td>{obj.get('finding_spot', 'N/A')}</td>
-                    <td>{obj.get('inventory_number', 'N/A')}</td>
-                    <td>{obj.get('bibliographical_source', 'N/A')}</td>
-                    <td>{obj.get('dimensions', 'N/A')}</td>
-                    <td>{obj.get('description', 'N/A')}</td>
-                    <td>{obj.get('production_place', 'N/A')}</td>
-                    <td>{obj.get('typology', 'N/A')}</td>
-                    <td>{obj.get('bibliographic_references', 'N/A')}</td>
-                    <td>{obj.get('handles', 'N/A')}</td>
-                    <td>{obj.get('foot', 'N/A')}</td>
-                    <td>{'Si' if obj.get('decoration') else 'No'}</td>
-                    <td>{obj.get('decoration_techniques', 'N/A')}</td>
-                    <td>{obj.get('iconography', 'N/A')}</td>
-                    <td>{obj.get('manufacturing_techniques', 'N/A')}</td>
-                    <td>{'Si' if obj.get('archaeometry_analyses') else 'No'}</td>
-                    <td>{obj.get('type_of_analysis', 'N/A')}</td>
-                    <td>{obj.get('raw_materials', 'N/A')}</td>
-                    <td>{obj.get('provenance', 'N/A')}</td>
-                    <td>{obj.get('other_info', 'N/A')}</td>
-                    <td>{'Si' if obj.get('stamp') else 'No'}</td>
-                    <td>{obj.get('stamp_text', 'N/A')}</td>
-                </tr>
+def create_popup(objects, title):
+    popup_content = """
+    <div style='background-color:white; overflow:auto; max-height:500px; max-width:700px;'>
+        <button onclick="this.parentElement.requestFullscreen()" style="float:right; margin-bottom:5px; padding:3px 8px; background:#007bff; color:white; border:none; border-radius:3px; cursor:pointer;">Fullscreen</button>
+        <table border='1' style='width:100%; border-collapse:collapse; font-size:12px; border: 2px solid #ddd;'>
+    """
+    
+    for obj_idx, obj in enumerate(objects):
+        # Aggiungi un separatore tra oggetti diversi
+        if obj_idx > 0:
+            popup_content += """
+            <tr>
+                <td colspan='2' style='padding:5px; background-color:#f8f9fa; text-align:center; border-top: 2px solid #ddd;'>
+                </td>
+            </tr>
             """
-
-            if obj.get('images'):
-                popup_content += "<tr><td colspan='25' style='text-align:center;'>"
-                for image in obj['images']:
-                    if isinstance(image, str):
-                        if image.startswith("http"):
-                            image_url = image
-                        else:
-                            image_url = f"https://capuan-bronzes-db-map.onrender.com/static/uploads/{image}"
-                        popup_content += f"<img src='{image_url}' style='max-width:200px; max-height:200px; margin:5px;'><br>"
-                popup_content += "</td></tr>"
-
-        popup_content += "</table></div>"
-        return popup_content
-
+        
+        # Lista ordinata dei campi da visualizzare
+        fields = [
+            ('ID Unico', obj.get('unique_id', 'N/A')),
+            ('Cronologia', obj.get('chronology', 'N/A')),
+            ('Forma', obj.get('shape', 'N/A')),
+            ('Luogo di Conservazione', obj.get('storing_place', 'N/A')),
+            ('Luogo di Ritrovamento', obj.get('finding_spot', 'N/A')),
+            ('Numero di Inventario', obj.get('inventory_number', 'N/A')),
+            ('Fonte Bibliografica', obj.get('bibliographical_source', 'N/A')),
+            ('Dimensioni', obj.get('dimensions', 'N/A')),
+            ('Descrizione', obj.get('description', 'N/A')),
+            ('Luogo di Produzione', obj.get('production_place', 'N/A')),
+            ('Tipologia', obj.get('typology', 'N/A')),
+            ('Riferimenti Bibliografici', obj.get('bibliographic_references', 'N/A')),
+            ('Anse/manici', obj.get('handles', 'N/A')),
+            ('Base/piede', obj.get('foot', 'N/A')),
+            ('Decorazione', 'Si' if obj.get('decoration') else 'No'),
+            ('Tecniche decorative', obj.get('decoration_techniques', 'N/A')),
+            ('Iconografia', obj.get('iconography', 'N/A')),
+            ('Tecniche produttive', obj.get('manufacturing_techniques', 'N/A')),
+            ('Analisi Archeometriche', 'Si' if obj.get('archaeometry_analyses') else 'No'),
+            ('Tipo di Analisi', obj.get('type_of_analysis', 'N/A')),
+            ('Materie Prime', obj.get('raw_materials', 'N/A')),
+            ('Provenienza', obj.get('provenance', 'N/A')),
+            ('Altre Informazioni', obj.get('other_info', 'N/A')),
+            ('Bollo', 'Si' if obj.get('stamp') else 'No'),
+            ('Testo del Bollo', obj.get('stamp_text', 'N/A'))
+        ]
+        
+        # Aggiungi ogni campo come riga separata
+        for field, value in fields:
+            popup_content += f"""
+            <tr>
+                <td style='padding:6px; font-weight:bold; white-space:nowrap; border: 1px solid #ddd;'>{field}</td>
+                <td style='padding:6px; border: 1px solid #ddd;'>{value}</td>
+            </tr>
+            """
+        
+        # Aggiungi le immagini se presenti
+        if obj.get('images'):
+            popup_content += f"""
+            <tr>
+                <td colspan='2' style='padding:6px; text-align:center; background-color:#f8f9fa; border: 1px solid #ddd;'>
+                    <strong>Immagini</strong>
+                </td>
+            </tr>
+            <tr>
+                <td colspan='2' style='padding:10px; text-align:center; border: 1px solid #ddd;'>
+            """
+            
+            for image in obj['images']:
+                if image.startswith("http"):
+                    image_url = image
+                else:
+                    image_url = f"https://capuan-bronzes-db-map.onrender.com/static/uploads/{image}"
+                
+                popup_content += f"""
+                <div style='display:inline-block; margin:5px; border:1px solid #ddd; padding:3px;'>
+                    <img src='{image_url}' style='max-width:180px; max-height:180px;'><br>
+                    <small style='font-size:10px;'>{image.split('/')[-1]}</small>
+                </div>
+                """
+            
+            popup_content += """
+                </td>
+            </tr>
+            """
+    
+    popup_content += """
+        </table>
+    </div>
+    """
+    return popup_content
     # Crea i marker per storing places
     for (lat, lon), objects in storing_places.items():
         Marker(
