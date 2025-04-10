@@ -7,23 +7,22 @@ from folium import Element
 import os
 
 def generate_map(geodata):
-    try:
     """
     Genera una mappa Folium con due livelli organizzati:
-    - Storing Places: Punti basati su storing_place_location con tabella di popup e immagini.
-    - Finding Spots: Punti basati su finding_spot_location con tabella di popup e immagini.
-    Include un pannello di ricerca avanzata per query dettagliate sui campi del database.
+    - Storing Places: Punti basati su storing_place_location
+    - Finding Spots: Punti basati su finding_spot_location
     """
-    # Crea una mappa centrata con impostazioni robuste
-    mymap = folium.Map(
-        location=[41.8719, 12.5674],
-        zoom_start=6,
-        tiles='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-        attr='OpenStreetMap',
-        control_scale=True,
-        height='100%',
-        width='100%'
-    )
+    try:  # <-- Linea 10
+        # Crea una mappa centrata con impostazioni robuste
+        mymap = folium.Map(
+            location=[41.8719, 12.5674],
+            zoom_start=6,
+            tiles='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+            attr='OpenStreetMap',
+            control_scale=True,
+            height='100%',
+            width='100%'
+        )
 
     # Aggiungi stili CSS per garantire la visualizzazione corretta
     mymap.get_root().html.add_child(Element("""

@@ -333,11 +333,10 @@ def map_view():
     try:
         geodata = get_geodata(session)
         mymap = generate_map(geodata)
-        return mymap._repr_html_()
+        return mymap._repr_html_()  # Restituisci direttamente l'HTML
     except Exception as e:
-        print(f"Error generating map: {str(e)}")
-        fallback_map = folium.Map(location=[41.8719, 12.5674], zoom_start=6)
-        return fallback_map._repr_html_()
+        print(f"Errore: {str(e)}")
+        return "Errore nel generare la mappa", 500
     finally:
         session.close()
 
