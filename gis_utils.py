@@ -12,7 +12,7 @@ def generate_map(geodata):
     - Storing Places: Punti basati su storing_place_location
     - Finding Spots: Punti basati su finding_spot_location
     """
-    try:  # <-- Linea 10
+    try:
         # Crea una mappa centrata con impostazioni robuste
         mymap = folium.Map(
             location=[41.8719, 12.5674],
@@ -24,107 +24,141 @@ def generate_map(geodata):
             width='100%'
         )
 
-    # Aggiungi stili CSS per garantire la visualizzazione corretta
-    mymap.get_root().html.add_child(Element("""
-    <style>
-        html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-        }
-        .folium-map {
-            position: absolute !important;
-            top: 0 !important;
-            bottom: 0 !important;
-            right: 0 !important;
-            left: 0 !important;
-            z-index: 1;
-        }
-        .search-container {
-            position: absolute;
-            top: 10px;
-            left: 60px;
-            z-index: 1000;
-        }
-        #search-panel {
-            z-index: 1000;
-            background: white;
-            padding: 15px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.2);
-            width: 300px;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-        .search-control {
-            margin-bottom: 10px;
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        .search-button {
-            background: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            width: 100%;
-        }
-        .search-button:hover {
-            background: #0056b3;
-        }
-        .search-results {
-            margin-top: 15px;
-        }
-        .search-results table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .search-results th, .search-results td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        .search-results th {
-            background-color: #f2f2f2;
-        }
-    </style>
-    """))
+        # Aggiungi stili CSS
+        css_style = """
+        <style>
+            html, body {
+                height: 100%;
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+            }
+            .folium-map {
+                position: absolute !important;
+                top: 0 !important;
+                bottom: 0 !important;
+                right: 0 !important;
+                left: 0 !important;
+                z-index: 1;
+            }
+            .search-container {
+                position: absolute;
+                top: 10px;
+                left: 60px;
+                z-index: 1000;
+            }
+            #search-panel {
+                z-index: 1000;
+                background: white;
+                padding: 15px;
+                border-radius: 5px;
+                box-shadow: 0 0 10px rgba(0,0,0,0.2);
+                width: 300px;
+                max-height: 80vh;
+                overflow-y: auto;
+            }
+            .search-control {
+                margin-bottom: 10px;
+                width: 100%;
+                padding: 8px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+            }
+            .search-button {
+                background: #007bff;
+                color: white;
+                border: none;
+                padding: 10px 15px;
+                border-radius: 4px;
+                cursor: pointer;
+                width: 100%;
+            }
+            .search-button:hover {
+                background: #0056b3;
+            }
+            .search-results {
+                margin-top: 15px;
+            }
+            .search-results table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            .search-results th, .search-results td {
+                border: 1px solid #ddd;
+                padding: 8px;
+                text-align: left;
+            }
+            .search-results th {
+                background-color: #f2f2f2;
+            }
+        </style>
+        """
+        mymap.get_root().html.add_child(Element(css_style))
 
-    # Crea i gruppi per i due livelli
-    storing_layer = FeatureGroup(name="Luoghi di conservazione", control=True)
-    finding_layer = FeatureGroup(name="Luoghi di rinvenimento", control=True)
+        # Crea i gruppi per i due livelli
+        storing_layer = FeatureGroup(name="Luoghi di conservazione", control=True)
+        finding_layer = FeatureGroup(name="Luoghi di rinvenimento", control=True)
 
-    # Organizza i dati per posizione
-    storing_places = defaultdict(list)
-    finding_spots = defaultdict(list)
-    markers = []
+        # Organizza i dati per posizione
+        storing_places = defaultdict(list)
+        finding_spots = defaultdict(list)
+        markers = []
 
-    for obj in geodata:
-        # Decodifica le geometrie con gestione degli errori
-        storing_point = None
-        finding_point = None
+        for obj in geodata:
+            # Decodifica le geometrie con gestione degli errori
+            storing_point = None
+            finding_point = None
 
-        try:
-            if 'storing_place_location' in obj and obj['storing_place_location']:
-                storing_point = wkb_loads(obj['storing_place_location'], hex=True)
-            if 'finding_spot_location' in obj and obj['finding_spot_location']:
-                finding_point = wkb_loads(obj['finding_spot_location'], hex=True)
-        except Exception as e:
-            print(f"Errore nel parsing delle coordinate per l'oggetto {obj.get('unique_id', 'N/A')}: {str(e)}")
-            continue
+            try:
+                if 'storing_place_location' in obj and obj['storing_place_location']:
+                    storing_point = wkb_loads(obj['storing_place_location'], hex=True)
+                if 'finding_spot_location' in obj and obj['finding_spot_location']:
+                    finding_point = wkb_loads(obj['finding_spot_location'], hex=True)
+            except Exception as e:
+                print(f"Errore nel parsing delle coordinate per l'oggetto {obj.get('unique_id', 'N/A')}: {str(e)}")
+                continue
 
-        # Ignora punti con coordinate nulle o zero
-        if storing_point and (storing_point.x != 0 and storing_point.y != 0):
-            storing_places[(storing_point.y, storing_point.x)].append(obj)
-            markers.append({"unique_id": obj['unique_id'], "latitude": storing_point.y, "longitude": storing_point.x})
+            # Ignora punti con coordinate nulle o zero
+            if storing_point and (storing_point.x != 0 and storing_point.y != 0):
+                storing_places[(storing_point.y, storing_point.x)].append(obj)
+                markers.append({"unique_id": obj['unique_id'], "latitude": storing_point.y, "longitude": storing_point.x})
 
-        if finding_point and (finding_point.x != 0 and finding_point.y != 0):
-            finding_spots[(finding_point.y, finding_point.x)].append(obj)
-            markers.append({"unique_id": obj['unique_id'], "latitude": finding_point.y, "longitude": finding_point.x})
+            if finding_point and (finding_point.x != 0 and finding_point.y != 0):
+                finding_spots[(finding_point.y, finding_point.x)].append(obj)
+                markers.append({"unique_id": obj['unique_id'], "latitude": finding_point.y, "longitude": finding_point.x})
+
+        # Crea i marker per storing places
+        for (lat, lon), objects in storing_places.items():
+            Marker(
+                location=[lat, lon],
+                popup=Popup(create_popup(objects, "Storing Place Objects"), max_width=700),
+                tooltip="Storing Place",
+                icon=folium.Icon(color="blue")
+            ).add_to(storing_layer)
+
+        # Crea i marker per finding spots
+        for (lat, lon), objects in finding_spots.items():
+            Marker(
+                location=[lat, lon],
+                popup=Popup(create_popup(objects, "Finding Spot Objects"), max_width=700),
+                tooltip="Finding Spot",
+                icon=folium.Icon(color="red")
+            ).add_to(finding_layer)
+
+        # Aggiungi i layer alla mappa
+        storing_layer.add_to(mymap)
+        finding_layer.add_to(mymap)
+
+        # Aggiungi il controllo di layer e fullscreen
+        LayerControl().add_to(mymap)
+        Fullscreen().add_to(mymap)
+
+        return mymap
+
+    except Exception as e:
+        print(f"Errore nella generazione della mappa: {str(e)}")
+        # Fallback: restituisci una mappa vuota in caso di errore
+        return folium.Map(location=[41.8719, 12.5674], zoom_start=6)
 
 def create_popup(objects, title):
     try:
@@ -229,7 +263,8 @@ def create_popup(objects, title):
 
     except Exception as e:
         print(f"Errore nella generazione del popup: {str(e)}")
-        return "<div>Errore nel caricamento dei dati</div>"
+        return "<div>Errore nel caricamento dei dati</div>"    
+
     # Crea i marker per storing places
     for (lat, lon), objects in storing_places.items():
         Marker(
