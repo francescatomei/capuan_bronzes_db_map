@@ -214,7 +214,7 @@ def generate_map(geodata):
 
     # Aggiungi il controllo di layer e fullscreen
     LayerControl().add_to(mymap)
-    Fullscreen().add_to(mymap))
+    Fullscreen().add_to(mymap)
 
     # Bottone della barra di ricerca con TUTTI i parametri originali
     search_button_html = """
