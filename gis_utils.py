@@ -13,10 +13,6 @@ def generate_map(geodata):
     - Finding Spots: Punti basati su finding_spot_location
     """
     try:
-        # Your code here
-        pass
-    except Exception as e:
-        print(f"An error occurred: {e}")
         # Crea una mappa centrata con impostazioni robuste
         mymap = folium.Map(
             location=[41.8719, 12.5674],
@@ -114,9 +110,9 @@ def generate_map(geodata):
             finding_point = None
 
             try:
-                if 'storing_place_location' in obj and obj['storing_place_location']:
+                if obj.get('storing_place_location'):
                     storing_point = wkb_loads(obj['storing_place_location'], hex=True)
-                if 'finding_spot_location' in obj and obj['finding_spot_location']:
+                if obj.get('finding_spot_location'):
                     finding_point = wkb_loads(obj['finding_spot_location'], hex=True)
             except Exception as e:
                 print(f"Errore nel parsing delle coordinate per l'oggetto {obj.get('unique_id', 'N/A')}: {str(e)}")
@@ -157,11 +153,193 @@ def generate_map(geodata):
         LayerControl().add_to(mymap)
         Fullscreen().add_to(mymap)
 
+        # Bottone della barra di ricerca con TUTTI i parametri originali
+        search_button_html = """
+        <div class="search-container">
+            <button onclick="toggleSearchPanel()" class="search-button">Ricerca Avanzata</button>
+            <div id="search-panel" style="display: none;">
+                <h4>Ricerca Avanzata</h4>
+                <form id="search-form">
+                    <select id="search-chronology" class="search-control">
+                        <option value="">Cronologia</option>
+                        <option value="I sec. a.C.">I sec. a.C.</option>
+                        <option value="I sec. d.C.">I sec. d.C.</option>
+                        <option value="II sec. d.C.">II sec. d.C.</option>
+                        <option value="III sec. d.C.">III sec. d.C.</option>
+                    </select>
+                    
+                    <select id="search-shape" class="search-control">
+                        <option value="">Forma</option>
+                        <option value="casseruola">Casseruola</option>
+                        <option value="coppa a becco">Coppa a becco</option>
+                        <option value="brocca">Brocca</option>
+                        <option value="brocca monoansata">Brocca monoansata</option>
+                        <option value="brocca a bocca trilobata">Brocca a bocca trilobata</option>
+                        <option value="situla">Situla</option>
+                        <option value="piede a forma di pelta">Piede a forma di pelta</option>
+                        <option value="patera">Patera</option>
+                        <option value="piede di situla">Piede di situla</option>
+                        <option value="manico di casseruola">Manico di casseruola</option>
+                        <option value="manico di patera">Manico di patera</option>
+                        <option value="mestolo">Mestolo</option>
+                        <option value="bacino">Bacino</option>
+                        <option value="colino">Colino</option>
+                        <option value="calderone">Calderone</option>
+                    </select>
+                    
+                    <input type="text" id="search-storing_place" class="search-control" placeholder="Luogo di Conservazione">
+                    <input type="text" id="search-finding_spot" class="search-control" placeholder="Luogo di Ritrovamento">
+                    <input type="text" id="search-production_place" class="search-control" placeholder="Luogo di Produzione">
+                    <input type="text" id="search-typology" class="search-control" placeholder="Tipologia">
+                    <input type="text" id="search-decoration_techniques" class="search-control" placeholder="Tecniche Decorative">
+                    <input type="text" id="search-iconography" class="search-control" placeholder="Iconografia">
+                    <input type="text" id="search-manufacturing_techniques" class="search-control" placeholder="Tecniche Produttive">
+                    <input type="text" id="search-type_of_analysis" class="search-control" placeholder="Tipo di Analisi">
+                    <input type="text" id="search-stamp_text" class="search-control" placeholder="Testo del Bollo">
+
+                    <div style="margin: 10px 0;">
+                        <label style="display: block; margin: 5px 0;">
+                            <input type="checkbox" id="search-decoration"> Decorazione
+                        </label>
+                        <label style="display: block; margin: 5px 0;">
+                            <input type="checkbox" id="search-archaeometry_analyses"> Analisi Archeometriche
+                        </label>
+                        <label style="display: block; margin: 5px 0;">
+                            <input type="checkbox" id="search-stamp"> Bollo
+                        </label>
+                    </div>
+
+                    <button type="button" class="search-button" onclick="executeSearch()">Cerca</button>
+                </form>
+
+                <div id="search-results" class="search-results"></div>
+            </div>
+        </div>
+
+        <script>
+        // Variabile globale per la mappa
+        var foliumMap;
+        
+        // Attendi che la mappa sia completamente caricata
+        function initializeMap() {
+            var mapElement = document.querySelector('.folium-map');
+            if (mapElement && mapElement._map) {
+                foliumMap = mapElement._map;
+            } else {
+                setTimeout(initializeMap, 100);
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeMap();
+        });
+
+        function toggleSearchPanel() {
+            const panel = document.getElementById('search-panel');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function executeSearch() {
+            const filters = {
+                "chronology": document.getElementById('search-chronology').value.trim(),
+                "shape": document.getElementById('search-shape').value.trim(),
+                "storing_place": document.getElementById('search-storing_place').value.trim(),
+                "finding_spot": document.getElementById('search-finding_spot').value.trim(),
+                "production_place": document.getElementById('search-production_place').value.trim(),
+                "typology": document.getElementById('search-typology').value.trim(),
+                "decoration_techniques": document.getElementById('search-decoration_techniques').value.trim(),
+                "iconography": document.getElementById('search-iconography').value.trim(),
+                "manufacturing_techniques": document.getElementById('search-manufacturing_techniques').value.trim(),
+                "type_of_analysis": document.getElementById('search-type_of_analysis').value.trim(),
+                "stamp_text": document.getElementById('search-stamp_text').value.trim(),
+                "decoration": document.getElementById('search-decoration').checked ? "true" : "false",
+                "archaeometry_analyses": document.getElementById('search-archaeometry_analyses').checked ? "true" : "false",
+                "stamp": document.getElementById('search-stamp').checked ? "true" : "false"
+            };
+
+            fetch('/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(filters)
+            })
+            .then(response => response.json())
+            .then(data => {
+                const resultsContainer = document.getElementById('search-results');
+                resultsContainer.innerHTML = "<h5>Risultati:</h5>";
+
+                if (data.length === 0) {
+                    resultsContainer.innerHTML += "<p>Nessun risultato trovato</p>";
+                    return;
+                }
+
+                let table = "<table border='1' style='width:100%;'>";
+                table += `
+                    <tr>
+                        <th>ID Unico</th>
+                        <th>Cronologia</th>
+                        <th>Forma</th>
+                        <th>Luogo di Conservazione</th>
+                        <th>Luogo di Ritrovamento</th>
+                        <th>Azioni</th>
+                    </tr>
+                `;
+
+                data.forEach(obj => {
+                    table += `
+                        <tr>
+                            <td>${obj.unique_id}</td>
+                            <td>${obj.chronology ? obj.chronology : "N/A"}</td>
+                            <td>${obj.shape ? obj.shape : "N/A"}</td>
+                            <td>${obj.storing_place ? obj.storing_place : "N/A"}</td>
+                            <td>${obj.finding_spot ? obj.finding_spot : "N/A"}</td>
+                            <td>
+                                <button onclick="centerMap(${obj.latitude}, ${obj.longitude})" style="padding: 5px 10px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer;">Mostra sulla mappa</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                table += "</table>";
+                resultsContainer.innerHTML += table;
+            })
+            .catch(error => console.error('Errore:', error));
+        }
+
+        function centerMap(latitude, longitude) {
+            if (foliumMap) {
+                foliumMap.setView([latitude, longitude], 15);
+            } else {
+                console.log("Mappa non ancora inizializzata, riprovo...");
+                setTimeout(function() {
+                    centerMap(latitude, longitude);
+                }, 100);
+            }
+        }
+        </script>
+        """
+        mymap.get_root().html.add_child(Element(search_button_html))
+        
         return mymap
 
-    # Removed redundant except block
+    except Exception as e:
+        import traceback
+        print(f"ERRORE nella generazione della mappa: {str(e)}")
+        traceback.print_exc()
+        # Restituisci comunque una mappa vuota in caso di errore
+        return folium.Map(
+            location=[41.8719, 12.5674],
+            zoom_start=6,
+            tiles='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+            attr='OpenStreetMap',
+            control_scale=True,
+            height='100%',
+            width='100%'
+        )
 
 def create_popup(objects, title):
+    """
+    Crea il contenuto HTML per un popup della mappa
+    """
     try:
         if not objects or not isinstance(objects, list):
             return "<div>Nessun dato disponibile</div>"
@@ -264,182 +442,4 @@ def create_popup(objects, title):
 
     except Exception as e:
         print(f"Errore nella generazione del popup: {str(e)}")
-        return "<div>Errore nel caricamento dei dati</div>"    
-
-    # Aggiungi i layer alla mappa
-    storing_layer.add_to(mymap)
-    finding_layer.add_to(mymap)
-
-    # Aggiungi il controllo di layer e fullscreen
-    LayerControl().add_to(mymap)
-    Fullscreen().add_to(mymap)
-
-    # Bottone della barra di ricerca con TUTTI i parametri originali
-    search_button_html = """
-    <div class="search-container">
-        <button onclick="toggleSearchPanel()" class="search-button">Ricerca Avanzata</button>
-        <div id="search-panel" style="display: none;">
-            <h4>Ricerca Avanzata</h4>
-            <form id="search-form">
-                <select id="search-chronology" class="search-control">
-                    <option value="">Cronologia</option>
-                    <option value="I sec. a.C.">I sec. a.C.</option>
-                    <option value="I sec. d.C.">I sec. d.C.</option>
-                    <option value="II sec. d.C.">II sec. d.C.</option>
-                    <option value="III sec. d.C.">III sec. d.C.</option>
-                </select>
-                
-                <select id="search-shape" class="search-control">
-                    <option value="">Forma</option>
-                    <option value="casseruola">Casseruola</option>
-                    <option value="coppa a becco">Coppa a becco</option>
-                    <option value="brocca">Brocca</option>
-                    <option value="brocca monoansata">Brocca monoansata</option>
-                    <option value="brocca a bocca trilobata">Brocca a bocca trilobata</option>
-                    <option value="situla">Situla</option>
-                    <option value="piede a forma di pelta">Piede a forma di pelta</option>
-                    <option value="patera">Patera</option>
-                    <option value="piede di situla">Piede di situla</option>
-                    <option value="manico di casseruola">Manico di casseruola</option>
-                    <option value="manico di patera">Manico di patera</option>
-                    <option value="mestolo">Mestolo</option>
-                    <option value="bacino">Bacino</option>
-                    <option value="colino">Colino</option>
-                    <option value="calderone">Calderone</option>
-                </select>
-                
-                <input type="text" id="search-storing_place" class="search-control" placeholder="Luogo di Conservazione">
-                <input type="text" id="search-finding_spot" class="search-control" placeholder="Luogo di Ritrovamento">
-                <input type="text" id="search-production_place" class="search-control" placeholder="Luogo di Produzione">
-                <input type="text" id="search-typology" class="search-control" placeholder="Tipologia">
-                <input type="text" id="search-decoration_techniques" class="search-control" placeholder="Tecniche Decorative">
-                <input type="text" id="search-iconography" class="search-control" placeholder="Iconografia">
-                <input type="text" id="search-manufacturing_techniques" class="search-control" placeholder="Tecniche Produttive">
-                <input type="text" id="search-type_of_analysis" class="search-control" placeholder="Tipo di Analisi">
-                <input type="text" id="search-stamp_text" class="search-control" placeholder="Testo del Bollo">
-
-                <div style="margin: 10px 0;">
-                    <label style="display: block; margin: 5px 0;">
-                        <input type="checkbox" id="search-decoration"> Decorazione
-                    </label>
-                    <label style="display: block; margin: 5px 0;">
-                        <input type="checkbox" id="search-archaeometry_analyses"> Analisi Archeometriche
-                    </label>
-                    <label style="display: block; margin: 5px 0;">
-                        <input type="checkbox" id="search-stamp"> Bollo
-                    </label>
-                </div>
-
-                <button type="button" class="search-button" onclick="executeSearch()">Cerca</button>
-            </form>
-
-            <div id="search-results" class="search-results"></div>
-        </div>
-    </div>
-
-    <script>
-    // Variabile globale per la mappa
-    var foliumMap;
-    
-    // Attendi che la mappa sia completamente caricata
-    function initializeMap() {
-        var mapElement = document.querySelector('.folium-map');
-        if (mapElement && mapElement._map) {
-            foliumMap = mapElement._map;
-        } else {
-            setTimeout(initializeMap, 100);
-        }
-    }
-    
-    document.addEventListener('DOMContentLoaded', function() {
-        initializeMap();
-    });
-
-    function toggleSearchPanel() {
-        const panel = document.getElementById('search-panel');
-        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-    }
-
-    function executeSearch() {
-        const filters = {
-            "chronology": document.getElementById('search-chronology').value.trim(),
-            "shape": document.getElementById('search-shape').value.trim(),
-            "storing_place": document.getElementById('search-storing_place').value.trim(),
-            "finding_spot": document.getElementById('search-finding_spot').value.trim(),
-            "production_place": document.getElementById('search-production_place').value.trim(),
-            "typology": document.getElementById('search-typology').value.trim(),
-            "decoration_techniques": document.getElementById('search-decoration_techniques').value.trim(),
-            "iconography": document.getElementById('search-iconography').value.trim(),
-            "manufacturing_techniques": document.getElementById('search-manufacturing_techniques').value.trim(),
-            "type_of_analysis": document.getElementById('search-type_of_analysis').value.trim(),
-            "stamp_text": document.getElementById('search-stamp_text').value.trim(),
-            "decoration": document.getElementById('search-decoration').checked ? "true" : "false",
-            "archaeometry_analyses": document.getElementById('search-archaeometry_analyses').checked ? "true" : "false",
-            "stamp": document.getElementById('search-stamp').checked ? "true" : "false"
-        };
-
-        fetch('/search', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(filters)
-        })
-        .then(response => response.json())
-        .then(data => {
-            const resultsContainer = document.getElementById('search-results');
-            resultsContainer.innerHTML = "<h5>Risultati:</h5>";
-
-            if (data.length === 0) {
-                resultsContainer.innerHTML += "<p>Nessun risultato trovato</p>";
-                return;
-            }
-
-            let table = "<table border='1' style='width:100%;'>";
-            table += `
-                <tr>
-                    <th>ID Unico</th>
-                    <th>Cronologia</th>
-                    <th>Forma</th>
-                    <th>Luogo di Conservazione</th>
-                    <th>Luogo di Ritrovamento</th>
-                    <th>Azioni</th>
-                </tr>
-            `;
-
-            data.forEach(obj => {
-                table += `
-                    <tr>
-                        <td>${obj.unique_id}</td>
-                        <td>${obj.chronology ? obj.chronology : "N/A"}</td>
-                        <td>${obj.shape ? obj.shape : "N/A"}</td>
-                        <td>${obj.storing_place ? obj.storing_place : "N/A"}</td>
-                        <td>${obj.finding_spot ? obj.finding_spot : "N/A"}</td>
-                        <td>
-                            <button onclick="centerMap(${obj.latitude}, ${obj.longitude})" style="padding: 5px 10px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer;">Mostra sulla mappa</button>
-                        </td>
-                    </tr>
-                `;
-            });
-
-            table += "</table>";
-            resultsContainer.innerHTML += table;
-        })
-        .catch(error => console.error('Errore:', error));
-    }
-
-    function centerMap(latitude, longitude) {
-        if (foliumMap) {
-            foliumMap.setView([latitude, longitude], 15);
-        } else {
-            console.log("Mappa non ancora inizializzata, riprovo...");
-            setTimeout(function() {
-                centerMap(latitude, longitude);
-            }, 100);
-        }
-    }
-    </script>
-    """
-    mymap.get_root().html.add_child(Element(search_button_html))
-   
-    return mymap  # <-- Assicurati che questa sia l'ultima riga
-    
-    # Removed redundant except block
+        return "<div>Errore nel caricamento dei dati</div>"
