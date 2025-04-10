@@ -13,6 +13,10 @@ def generate_map(geodata):
     - Finding Spots: Punti basati su finding_spot_location
     """
     try:
+        # Your code here
+        pass
+    except Exception as e:
+        print(f"An error occurred: {e}")
         # Crea una mappa centrata con impostazioni robuste
         mymap = folium.Map(
             location=[41.8719, 12.5674],
@@ -155,10 +159,7 @@ def generate_map(geodata):
 
         return mymap
 
-    except Exception as e:
-        print(f"Errore nella generazione della mappa: {str(e)}")
-        # Fallback: restituisci una mappa vuota in caso di errore
-        return folium.Map(location=[41.8719, 12.5674], zoom_start=6)
+    # Removed redundant except block
 
 def create_popup(objects, title):
     try:
@@ -264,24 +265,6 @@ def create_popup(objects, title):
     except Exception as e:
         print(f"Errore nella generazione del popup: {str(e)}")
         return "<div>Errore nel caricamento dei dati</div>"    
-
-    # Crea i marker per storing places
-    for (lat, lon), objects in storing_places.items():
-        Marker(
-            location=[lat, lon],
-            popup=Popup(create_popup(objects, "Storing Place Objects"), max_width=700),
-            tooltip="Storing Place",
-            icon=folium.Icon(color="blue")
-        ).add_to(storing_layer)
-
-    # Crea i marker per finding spots
-    for (lat, lon), objects in finding_spots.items():
-        Marker(
-            location=[lat, lon],
-            popup=Popup(create_popup(objects, "Finding Spot Objects"), max_width=700),
-            tooltip="Finding Spot",
-            icon=folium.Icon(color="red")
-        ).add_to(finding_layer)
 
     # Aggiungi i layer alla mappa
     storing_layer.add_to(mymap)
@@ -456,10 +439,7 @@ def create_popup(objects, title):
     </script>
     """
     mymap.get_root().html.add_child(Element(search_button_html))
+   
+    return mymap  # <-- Assicurati che questa sia l'ultima riga
     
-        return mymap  # <-- Assicurati che questa sia l'ultima riga
-    
-    except Exception as e:
-        print(f"Errore nella generazione della mappa: {str(e)}")
-        # Fallback: restituisci una mappa vuota in caso di errore
-        return folium.Map(location=[41.8719, 12.5674], zoom_start=6)
+    # Removed redundant except block
