@@ -7,6 +7,7 @@ from folium import Element
 import os
 
 def generate_map(geodata):
+    try:
     """
     Genera una mappa Folium con due livelli organizzati:
     - Storing Places: Punti basati su storing_place_location con tabella di popup e immagini.
@@ -422,4 +423,9 @@ def create_popup(objects, title):
     """
     mymap.get_root().html.add_child(Element(search_button_html))
     
-    return mymap
+        return mymap  # <-- Assicurati che questa sia l'ultima riga
+    
+    except Exception as e:
+        print(f"Errore nella generazione della mappa: {str(e)}")
+        # Fallback: restituisci una mappa vuota in caso di errore
+        return folium.Map(location=[41.8719, 12.5674], zoom_start=6)

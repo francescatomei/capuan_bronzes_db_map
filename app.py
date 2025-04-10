@@ -333,12 +333,13 @@ def map_view():
     try:
         geodata = get_geodata(session)
         mymap = generate_map(geodata)
-        mymap.save("templates/map.html")
+        return mymap._repr_html_()
+    except Exception as e:
+        print(f"Error generating map: {str(e)}")
+        fallback_map = folium.Map(location=[41.8719, 12.5674], zoom_start=6)
+        return fallback_map._repr_html_()
     finally:
         session.close()
-    return render_template("map.html")
-
-from sqlalchemy.sql import text
 
 @app.route('/search', methods=['POST'])
 def search_objects():
