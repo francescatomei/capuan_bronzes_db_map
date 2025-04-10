@@ -152,58 +152,62 @@ def create_popup(objects, title):
                 popup_content += """
                 <tr><td colspan='2' style='border-top:2px solid #ddd; height:5px;'></td></tr>
                 """
-        
-        # Lista ordinata dei campi da visualizzare
-        fields = [
-            ('ID Unico', obj.get('unique_id', 'N/A')),
-            ('Cronologia', obj.get('chronology', 'N/A')),
-            ('Forma', obj.get('shape', 'N/A')),
-            ('Luogo di Conservazione', obj.get('storing_place', 'N/A')),
-            ('Luogo di Ritrovamento', obj.get('finding_spot', 'N/A')),
-            ('Numero di Inventario', obj.get('inventory_number', 'N/A')),
-            ('Fonte Bibliografica', obj.get('bibliographical_source', 'N/A')),
-            ('Dimensioni', obj.get('dimensions', 'N/A')),
-            ('Descrizione', obj.get('description', 'N/A')),
-            ('Luogo di Produzione', obj.get('production_place', 'N/A')),
-            ('Tipologia', obj.get('typology', 'N/A')),
-            ('Riferimenti Bibliografici', obj.get('bibliographic_references', 'N/A')),
-            ('Anse/manici', obj.get('handles', 'N/A')),
-            ('Base/piede', obj.get('foot', 'N/A')),
-            ('Decorazione', 'Si' if obj.get('decoration') else 'No'),
-            ('Tecniche decorative', obj.get('decoration_techniques', 'N/A')),
-            ('Iconografia', obj.get('iconography', 'N/A')),
-            ('Tecniche produttive', obj.get('manufacturing_techniques', 'N/A')),
-            ('Analisi Archeometriche', 'Si' if obj.get('archaeometry_analyses') else 'No'),
-            ('Tipo di Analisi', obj.get('type_of_analysis', 'N/A')),
-            ('Materie Prime', obj.get('raw_materials', 'N/A')),
-            ('Provenienza', obj.get('provenance', 'N/A')),
-            ('Altre Informazioni', obj.get('other_info', 'N/A')),
-            ('Bollo', 'Si' if obj.get('stamp') else 'No'),
-            ('Testo del Bollo', obj.get('stamp_text', 'N/A'))
-        ]
-        
-        # Aggiungi ogni campo come riga separata
-        for field, value in fields:
-            popup_content += f"""
-            <tr>
-                <td style='padding:6px; font-weight:bold; white-space:nowrap; border: 1px solid #ddd;'>{field}</td>
-                <td style='padding:6px; border: 1px solid #ddd;'>{value}</td>
-            </tr>
-            """
-        
-        # Aggiungi le immagini se presenti
-        if obj.get('images'):
-            popup_content += f"""
-            <tr>
-                <td colspan='2' style='padding:6px; text-align:center; background-color:#f8f9fa; border: 1px solid #ddd;'>
-                    <strong>Immagini</strong>
-                </td>
-            </tr>
-            <tr>
-                <td colspan='2' style='padding:10px; text-align:center; border: 1px solid #ddd;'>
-            """
-            
-                for image in obj['images'] if isinstance(obj['images'], list) else []:
+
+            fields = [
+                ('ID Unico', obj.get('unique_id', 'N/A')),
+                ('Cronologia', obj.get('chronology', 'N/A')),
+                ('Forma', obj.get('shape', 'N/A')),
+                ('Luogo di Conservazione', obj.get('storing_place', 'N/A')),
+                ('Luogo di Ritrovamento', obj.get('finding_spot', 'N/A')),
+                ('Numero di Inventario', obj.get('inventory_number', 'N/A')),
+                ('Fonte Bibliografica', obj.get('bibliographical_source', 'N/A')),
+                ('Dimensioni', obj.get('dimensions', 'N/A')),
+                ('Descrizione', obj.get('description', 'N/A')),
+                ('Luogo di Produzione', obj.get('production_place', 'N/A')),
+                ('Tipologia', obj.get('typology', 'N/A')),
+                ('Riferimenti Bibliografici', obj.get('bibliographic_references', 'N/A')),
+                ('Anse/manici', obj.get('handles', 'N/A')),
+                ('Base/piede', obj.get('foot', 'N/A')),
+                ('Decorazione', 'Si' if obj.get('decoration') else 'No'),
+                ('Tecniche decorative', obj.get('decoration_techniques', 'N/A')),
+                ('Iconografia', obj.get('iconography', 'N/A')),
+                ('Tecniche produttive', obj.get('manufacturing_techniques', 'N/A')),
+                ('Analisi Archeometriche', 'Si' if obj.get('archaeometry_analyses') else 'No'),
+                ('Tipo di Analisi', obj.get('type_of_analysis', 'N/A')),
+                ('Materie Prime', obj.get('raw_materials', 'N/A')),
+                ('Provenienza', obj.get('provenance', 'N/A')),
+                ('Altre Informazioni', obj.get('other_info', 'N/A')),
+                ('Bollo', 'Si' if obj.get('stamp') else 'No'),
+                ('Testo del Bollo', obj.get('stamp_text', 'N/A'))
+            ]
+
+            for field, value in fields:
+                popup_content += f"""
+                <tr>
+                    <td style='padding:6px; font-weight:bold; white-space:nowrap; 
+                               border:1px solid #ddd; background-color:#f8f9fa;'>
+                        {field}
+                    </td>
+                    <td style='padding:6px; border:1px solid #ddd;'>
+                        {value if value else 'N/A'}
+                    </td>
+                </tr>
+                """
+
+            # Gestione immagini con controllo degli errori
+            if obj.get('images'):
+                popup_content += """
+                <tr>
+                    <td colspan='2' style='padding:5px; text-align:center; 
+                                          background-color:#f8f9fa; border:1px solid #ddd;'>
+                        <strong>Immagini</strong>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan='2' style='padding:5px; text-align:center; border:1px solid #ddd;'>
+                """
+                
+                for image in (obj['images'] if isinstance(obj['images'], list) else []):
                     try:
                         if isinstance(image, str):
                             image_url = (image if image.startswith("http") else 
@@ -226,7 +230,6 @@ def create_popup(objects, title):
     except Exception as e:
         print(f"Errore nella generazione del popup: {str(e)}")
         return "<div>Errore nel caricamento dei dati</div>"
-
     # Crea i marker per storing places
     for (lat, lon), objects in storing_places.items():
         Marker(
