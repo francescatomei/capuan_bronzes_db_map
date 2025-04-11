@@ -9,11 +9,14 @@ import os
 def generate_map(geodata):
     """
     Genera una mappa Folium con due livelli organizzati:
-    - Storing Places: Punti basati su storing_place_location
-    - Finding Spots: Punti basati su finding_spot_location
+    - Storing Places: Punti basati su storing_place_location (icona blu)
+    - Finding Spots: Punti basati su finding_spot_location (icona rossa)
+    I tooltip mostrano:
+    - Per luoghi di conservazione: nome del luogo + numero oggetti
+    - Per luoghi di rinvenimento: nome del luogo + numero oggetti
     """
     try:
-        # Crea una mappa centrata con impostazioni robuste
+        # Crea mappa centrata sull'Italia
         mymap = folium.Map(
             location=[41.8719, 12.5674],
             zoom_start=6,
@@ -95,17 +98,16 @@ def generate_map(geodata):
         """
         mymap.get_root().html.add_child(Element(css_style))
 
-        # Crea i gruppi per i due livelli
+        # Crea i gruppi per i livelli
         storing_layer = FeatureGroup(name="Luoghi di conservazione", control=True)
         finding_layer = FeatureGroup(name="Luoghi di rinvenimento", control=True)
 
         # Organizza i dati per posizione
         storing_places = defaultdict(list)
         finding_spots = defaultdict(list)
-        markers = []
 
         for obj in geodata:
-            # Decodifica le geometrie con gestione degli errori
+            # Parsing delle coordinate
             storing_point = None
             finding_point = None
 
@@ -118,14 +120,12 @@ def generate_map(geodata):
                 print(f"Errore nel parsing delle coordinate per l'oggetto {obj.get('unique_id', 'N/A')}: {str(e)}")
                 continue
 
-            # Ignora punti con coordinate nulle o zero
+            # Aggiungi ai rispettivi layer
             if storing_point and (storing_point.x != 0 and storing_point.y != 0):
                 storing_places[(storing_point.y, storing_point.x)].append(obj)
-                markers.append({"unique_id": obj['unique_id'], "latitude": storing_point.y, "longitude": storing_point.x})
-
+                
             if finding_point and (finding_point.x != 0 and finding_point.y != 0):
                 finding_spots[(finding_point.y, finding_point.x)].append(obj)
-                markers.append({"unique_id": obj['unique_id'], "latitude": finding_point.y, "longitude": finding_point.x})
 
         # Crea i marker per STORING PLACES (blu)
         for (lat, lon), objects in storing_places.items():
@@ -133,8 +133,9 @@ def generate_map(geodata):
             place_name = next(
                 (obj.get('storing_place', 'Luogo di conservazione') 
                 for obj in objects 
-                if obj.get('storing_place')
-            ) if objects else 'Luogo di conservazione'
+                if obj.get('storing_place')), 
+                'Luogo di conservazione'
+            )
             
             tooltip_text = f"{place_name} ({len(objects)} oggetti)"
             
@@ -151,8 +152,9 @@ def generate_map(geodata):
             spot_name = next(
                 (obj.get('finding_spot', 'Luogo di rinvenimento') 
                 for obj in objects 
-                if obj.get('finding_spot')
-            ) if objects else 'Luogo di rinvenimento'
+                if obj.get('finding_spot')), 
+                'Luogo di rinvenimento'
+            )
             
             tooltip_text = f"{spot_name} ({len(objects)} oggetti)"
             
@@ -167,7 +169,7 @@ def generate_map(geodata):
         storing_layer.add_to(mymap)
         finding_layer.add_to(mymap)
 
-        # Aggiungi il controllo di layer e fullscreen
+        # Aggiungi controlli
         LayerControl().add_to(mymap)
         Fullscreen().add_to(mymap)
 
