@@ -127,22 +127,40 @@ def generate_map(geodata):
                 finding_spots[(finding_point.y, finding_point.x)].append(obj)
                 markers.append({"unique_id": obj['unique_id'], "latitude": finding_point.y, "longitude": finding_point.x})
 
-        # Crea i marker per storing places
+        # Crea i marker per STORING PLACES (blu)
         for (lat, lon), objects in storing_places.items():
+            # Nome luogo + conteggio oggetti
+            place_name = next(
+                (obj.get('storing_place', 'Luogo di conservazione') 
+                for obj in objects 
+                if obj.get('storing_place')
+            ) if objects else 'Luogo di conservazione'
+            
+            tooltip_text = f"{place_name} ({len(objects)} oggetti)"
+            
             Marker(
                 location=[lat, lon],
-                popup=Popup(create_popup(objects, "Storing Place Objects"), max_width=700),
-                tooltip="Storing Place",
-                icon=folium.Icon(color="blue")
+                popup=Popup(create_popup(objects, f"Luogo di conservazione: {place_name}"), max_width=700),
+                tooltip=tooltip_text,
+                icon=folium.Icon(color="blue", icon="archive", prefix="fa")
             ).add_to(storing_layer)
 
-        # Crea i marker per finding spots
+        # Crea i marker per FINDING SPOTS (rossi)
         for (lat, lon), objects in finding_spots.items():
+            # Nome luogo + conteggio oggetti
+            spot_name = next(
+                (obj.get('finding_spot', 'Luogo di rinvenimento') 
+                for obj in objects 
+                if obj.get('finding_spot')
+            ) if objects else 'Luogo di rinvenimento'
+            
+            tooltip_text = f"{spot_name} ({len(objects)} oggetti)"
+            
             Marker(
                 location=[lat, lon],
-                popup=Popup(create_popup(objects, "Finding Spot Objects"), max_width=700),
-                tooltip="Finding Spot",
-                icon=folium.Icon(color="red")
+                popup=Popup(create_popup(objects, f"Luogo di rinvenimento: {spot_name}"), max_width=700),
+                tooltip=tooltip_text,
+                icon=folium.Icon(color="red", icon="search", prefix="fa")
             ).add_to(finding_layer)
 
         # Aggiungi i layer alla mappa
